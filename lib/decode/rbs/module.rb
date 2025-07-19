@@ -20,7 +20,7 @@ module Decode
 			# Convert the module definition to RBS AST
 			def to_rbs_ast(method_definitions = [], index = nil)
 				name = simple_name_to_rbs(@definition.name)
-				comment = extract_comment(@definition)
+				comment = self.comment
 				
 				# Build method definitions
 				methods = method_definitions.map{|method_def| Method.new(method_def).to_rbs_ast(index)}.compact

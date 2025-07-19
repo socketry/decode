@@ -4,7 +4,7 @@ module Decode
     # Describes an attribute type.
     #
     # - `@attribute [Integer] The person's age.`
-    class Attribute < ::Tag
+    class Attribute < Tag
       # Build an attribute from a directive and match.
       public def self.build: (String directive, MatchData match) -> untyped
 
@@ -40,13 +40,13 @@ module Decode
     # Describes a method option (keyword argument).
     #
     # - `@option :cached [Boolean] Whether to cache the value.`
-    class Option < ::Parameter
+    class Option < Parameter
     end
 
     # Represents a named method parameter.
     #
     # - `@parameter age [Float] The users age.`
-    class Parameter < ::Tag
+    class Parameter < Tag
       # Build a parameter from a directive and regex match.
       public def self.build: (String directive, MatchData match) -> Parameter
 
@@ -60,7 +60,7 @@ module Decode
     # - `@deprecated Please use {other_method} instead.`
     # - `@blocking This method may block.`
     # - `@asynchronous This method may yield.`
-    class Pragma < ::Tag
+    class Pragma < Tag
       # Parse a pragma directive from text.
       public def self.parse: (String directive, String text, Array[String] lines, Array[Tag] tags, Integer level) -> untyped
 
@@ -74,7 +74,7 @@ module Decode
     # Identifies that a method might raise an exception.
     #
     # - `@raises [ArgumentError] If the argument cannot be coerced.`
-    class Raises < ::Attribute
+    class Raises < Attribute
     end
 
     # Represents an RBS type annotation following rbs-inline syntax.
@@ -82,7 +82,7 @@ module Decode
     # Examples:
     # - `@rbs generic T` - Declares a generic type parameter for a class
     # - `@rbs [T] () { () -> T } -> Task[T]` - Complete method type signature
-    class RBS < ::Tag
+    class RBS < Tag
       # Parse an RBS pragma from text.
       public def self.parse: (String directive, String text, Array[String] lines, Array[Tag] tags, Integer level) -> untyped
 
@@ -108,11 +108,11 @@ module Decode
     # Represents a return value.
     #
     # Example: `@returns [Integer] The person's age.`
-    class Returns < ::Attribute
+    class Returns < Attribute
     end
 
     # Represents a documentation tag parsed from a comment directive.
-    class Tag < ::Node
+    class Tag < Node
       # Build a pattern for bracketed content, supporting nested brackets.
       public def self.bracketed_content: (String name) -> String
 
@@ -156,7 +156,7 @@ module Decode
     # Identifies that a method might throw a specific symbol.
     #
     # - `@throws [:skip] To skip recursion.`
-    class Throws < ::Attribute
+    class Throws < Attribute
     end
 
     # Describes a block parameter.
@@ -164,7 +164,7 @@ module Decode
     # - `@yields {|person| ... } If a block is given.`
     #
     # Should contain nested parameters.
-    class Yields < ::Tag
+    class Yields < Tag
       # Build a yields tag from a directive and match.
       public def self.build: (String directive, MatchData match) -> untyped
 
@@ -202,10 +202,10 @@ module Decode
     public def nested_name: () -> String
 
     # Does the definition name match the specified prefix?
-    public def start_with?: () -> bool
+    public def start_with?: (String prefix) -> bool
 
     # Convert this definition into another kind of definition.
-    public def convert: () -> untyped
+    public def convert: (Symbol kind) -> untyped
 
     # A short form of the definition.
     # e.g. `def short_form`.
@@ -239,7 +239,7 @@ module Decode
   end
 
   # Structured access to a set of comment lines.
-  class Documentation < ::Comment::Node
+  class Documentation < Comment::Node
     # Initialize the documentation with an array of comments, within a specific language.
     public def initialize: (Array[String] comments, Language language) -> void
   end
@@ -290,7 +290,7 @@ module Decode
     # An reference which can be resolved to zero or more definitions.
     class Reference
       # Initialize the reference.
-      public def initialize: (String identifier) -> void
+      public def initialize: (String identifier, Language::Generic language, Array[String] | nil lexical_path) -> void
 
       # Generate a string representation of the reference.
       public def to_s: () -> untyped
@@ -326,7 +326,7 @@ module Decode
       public def self.new: () -> Ruby::Generic
 
       # Represents an alias statement, e.g., `alias new_name old_name` or `alias_method :new_name, :old_name`
-      class Alias < ::Definition
+      class Alias < Definition
         # Initialize a new alias definition.
         public def initialize: (String new_name, String old_name, Hash options) -> void
 
@@ -341,7 +341,7 @@ module Decode
       end
 
       # A Ruby-specific attribute.
-      class Attribute < ::Definition
+      class Attribute < Definition
         # The short form of the attribute.
         # e.g. `attr :value`.
         public def short_form: () -> untyped
@@ -351,7 +351,7 @@ module Decode
       end
 
       # A Ruby-specific block which might carry other definitions.
-      class Block < ::Definition
+      class Block < Definition
         # A block can sometimes be a container for other definitions.
         public def container?: () -> bool
 
@@ -375,7 +375,7 @@ module Decode
       end
 
       # A Ruby-specific block which might carry other definitions.
-      class Call < ::Definition
+      class Call < Definition
         # A block can sometimes be a container for other definitions.
         public def container?: () -> bool
 
@@ -393,7 +393,7 @@ module Decode
       end
 
       # A Ruby-specific class.
-      class Class < ::Definition
+      class Class < Definition
         # Initialize a new class definition.
         public def initialize: (Array arguments, String super_class, Hash options) -> void
 
@@ -414,7 +414,7 @@ module Decode
       end
 
       # A Ruby-specific singleton class.
-      class Singleton < ::Definition
+      class Singleton < Definition
         # Generate a nested name for the singleton class.
         public def nested_name: () -> untyped
 
@@ -439,7 +439,7 @@ module Decode
       end
 
       # A Ruby-specific constant.
-      class Constant < ::Definition
+      class Constant < Definition
         # The short form of the constant.
         # e.g. `NAME`.
         public def short_form: () -> untyped
@@ -453,7 +453,7 @@ module Decode
       end
 
       # Represents a Ruby-specific definition extracted from source code.
-      class Definition < ::Decode::Definition
+      class Definition < Decode::Definition
         # Initialize the definition from the syntax tree node.
         public def initialize: (Array arguments, Symbol visibility, Parser::AST::Node node, Hash options) -> void
 
@@ -471,7 +471,7 @@ module Decode
       end
 
       # A Ruby-specific function.
-      class Function < ::Method
+      class Function < Method
         # Generate a nested name for the function.
         public def nested_name: () -> untyped
 
@@ -480,7 +480,7 @@ module Decode
       end
 
       # Represents the Ruby language implementation for parsing and analysis.
-      class Generic < ::Language::Generic
+      class Generic < Language::Generic
         # Get the parser for Ruby source code.
         public def parser: () -> Parser
 
@@ -492,7 +492,7 @@ module Decode
       end
 
       # A Ruby-specific method.
-      class Method < ::Definition
+      class Method < Definition
         # Initialize a new method definition.
         public def initialize: (Array arguments, String receiver, Hash options) -> void
 
@@ -522,7 +522,7 @@ module Decode
       end
 
       # A Ruby-specific module.
-      class Module < ::Definition
+      class Module < Definition
         # A module is a container for other definitions.
         public def container?: () -> bool
 
@@ -554,19 +554,19 @@ module Decode
       end
 
       # An Ruby-specific reference which can be resolved to zero or more definitions.
-      class Reference < ::Language::Reference
+      class Reference < Language::Reference
         # Create a reference from a constant node.
-        public def self.from_const: (Prism::Node node, Language language) -> untyped
+        public def self.from_const: (Prism::Node node, Language::Generic language) -> untyped
 
         # Append a constant node to the path.
-        public def self.append_const: (Prism::Node node, Array path) -> self
+        public def self.append_const: (Prism::Node node, Array path) -> Array
 
         # Split a Ruby identifier into prefix and name components.
         public def split: (String text) -> untyped
       end
 
       # A Ruby specific code segment.
-      class Segment < ::Decode::Segment
+      class Segment < Decode::Segment
         # Initialize a new Ruby segment.
         public def initialize: (Array[String] comments, Language language, Prism::Node node, Hash options) -> void
 
@@ -615,7 +615,7 @@ module Decode
   # RBS generation functionality for Ruby type signatures.
   module RBS
     # Represents a Ruby class definition wrapper for RBS generation.
-    class Class < ::Wrapper
+    class Class < Wrapper
       # Initialize a new class wrapper.
       public def initialize: (Decode::Definition definition) -> void
 
@@ -637,24 +637,42 @@ module Decode
     end
 
     # Represents a Ruby method definition wrapper for RBS generation.
-    class Method < ::Wrapper
+    class Method < Wrapper
       # Initialize a new method wrapper.
       public def initialize: (Decode::Definition definition) -> void
 
       # Extract method signatures from the method definition.
       public def signatures: () -> Array
 
+      # Extract keyword arguments from the method definition.
+      public def keyword_arguments: () -> Hash
+
+      # Extract return type from the method definition.
+      public def return_type: () -> ::RBS::Types::t
+
+      # Extract parameters from the method definition.
+      public def parameters: () -> Array
+
       # Convert the method definition to RBS AST
       public def to_rbs_ast: () -> untyped
     end
 
     # Represents a Ruby module definition wrapper for RBS generation.
-    class Module < ::Wrapper
+    class Module < Wrapper
       # Initialize a new module wrapper.
       public def initialize: (Decode::Definition definition) -> void
 
       # Convert the module definition to RBS AST
       public def to_rbs_ast: () -> untyped
+    end
+
+    module Type
+      # Check if an RBS type represents a nullable/optional type
+      # This method recursively traverses the type tree to find nil anywhere
+      public def self.nullable?: (::RBS::Types::t rbs_type) -> bool
+
+      # Parse a type string and convert it to RBS type
+      public def self.parse: (String type_string) -> ::RBS::Types::t
     end
 
     # Base wrapper class for RBS generation from definitions.
@@ -664,11 +682,14 @@ module Decode
 
       # Extract RBS tags from the definition's documentation.
       public def tags: () -> Array
+
+      # Extract comment from the definition's documentation.
+      public def comment: () -> (RBS::AST::Comment | nil)
     end
   end
 
   # An abstract namespace for nesting definitions.
-  class Scope < ::Definition
+  class Scope < Definition
     public def short_form: () -> String
 
     # Scopes are always containers.
@@ -716,7 +737,7 @@ module Decode
   # Provides syntax rewriting and linking functionality.
   module Syntax
     # Represents a link to a definition in the documentation.
-    class Link < ::Match
+    class Link < Match
       # Initialize a new link.
       public def initialize: (Range range, Definition definition) -> void
 

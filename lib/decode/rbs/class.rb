@@ -27,7 +27,7 @@ module Decode
 			# Convert the class definition to RBS AST
 			def to_rbs_ast(method_definitions = [], index = nil)
 				name = simple_name_to_rbs(@definition.name)
-				comment = extract_comment(@definition)
+				comment = self.comment
 				
 				# Extract generics from RBS tags
 				type_params = generics.map do |generic|
@@ -78,9 +78,16 @@ module Decode
 			def qualified_name_to_rbs(qualified_name)
 				parts = qualified_name.split("::")
 				name = parts.pop
-				namespace = ::RBS::Namespace.new(path: parts.map(&:to_sym), absolute: true)
 				
-				::RBS::TypeName.new(name: name.to_sym, namespace: namespace)
+				# For simple names (no ::), create relative references within current namespace
+				if parts.empty?
+					::RBS::TypeName.new(name: name.to_sym, namespace: ::RBS::Namespace.empty)
+				else
+					# For qualified names within the same root namespace, use relative references
+					# This handles cases like Comment::Node, Language::Generic within Decode module
+					namespace = ::RBS::Namespace.new(path: parts.map(&:to_sym), absolute: false)
+					::RBS::TypeName.new(name: name.to_sym, namespace: namespace)
+				end
 			end
 			
 		end

@@ -5,7 +5,7 @@ class Animal
 end
 
 # A dog is a type of animal.
-class Dog < ::Animal
+class Dog < Animal
   # Dogs bark.
   public def speak: () -> untyped
 

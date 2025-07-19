@@ -74,7 +74,7 @@ describe Decode::RBS::Class do
 				
 				expect(ast.super_class).not.to be_nil
 				expect(ast.super_class.name.name).to be == :BaseClass
-				expect(ast.super_class.name.namespace).to be(:absolute?)
+				expect(ast.super_class.name.namespace).not.to be(:absolute?)
 			end
 		end
 		
@@ -129,17 +129,17 @@ describe Decode::RBS::Class do
 				
 				expect(type_name).to be_a(::RBS::TypeName)
 				expect(type_name.name).to be == :TestClass
-				expect(type_name.namespace.absolute?).to be_truthy
+				expect(type_name.namespace).not.to be(:absolute?)
 				expect(type_name.namespace.path).to be == [:"", :Base]
 			end
 		end
 		
-		with "#extract_comment" do
+		with "#comment" do
 			with "definition with text documentation" do
 				let(:comments) {["Test comment"]}
 				
 				it "extracts comment from documentation" do
-					comment = rbs_class.send(:extract_comment, definition)
+					comment = rbs_class.comment
 					
 					expect(comment).to be_a(::RBS::AST::Comment)
 					expect(comment.string).to be == "Test comment"
@@ -148,7 +148,7 @@ describe Decode::RBS::Class do
 			
 			with "definition without documentation" do
 				it "returns nil when no documentation" do
-					comment = rbs_class.send(:extract_comment, definition)
+					comment = rbs_class.comment
 					expect(comment).to be_nil
 				end
 			end

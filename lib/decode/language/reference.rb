@@ -9,6 +9,8 @@ module Decode
 		class Reference
 			# Initialize the reference.
 			# @parameter identifier [String] The identifier part of the reference.
+			# @parameter language [Language::Generic] The language this reference belongs to.
+			# @parameter lexical_path [Array(String) | nil] The lexical path scope for resolution.
 			def initialize(identifier, language, lexical_path = nil)
 				@identifier = identifier
 				@language = language

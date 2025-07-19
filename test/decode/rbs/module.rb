@@ -73,12 +73,12 @@ describe Decode::RBS::Module do
 			end
 		end
 		
-		with "#extract_comment" do
+		with "#comment" do
 			with "definition with text documentation" do
 				let(:comments) {["Test module comment"]}
 				
 				it "extracts comment from documentation" do
-					comment = rbs_module.send(:extract_comment, definition)
+					comment = rbs_module.comment
 					
 					expect(comment).to be_a(::RBS::AST::Comment)
 					expect(comment.string).to be == "Test module comment"
@@ -87,7 +87,7 @@ describe Decode::RBS::Module do
 			
 			with "definition without documentation" do
 				it "returns nil when no documentation" do
-					comment = rbs_module.send(:extract_comment, definition)
+					comment = rbs_module.comment
 					expect(comment).to be_nil
 				end
 			end
@@ -96,7 +96,7 @@ describe Decode::RBS::Module do
 				let(:comments) {["First line", "Second line"]}
 				
 				it "joins multiple text lines with newlines" do
-					comment = rbs_module.send(:extract_comment, definition)
+					comment = rbs_module.comment
 					
 					expect(comment).to be_a(::RBS::AST::Comment)
 					expect(comment.string).to be == "First line\nSecond line"

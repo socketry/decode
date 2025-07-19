@@ -106,12 +106,14 @@ module Decode
 		end
 		
 		# Does the definition name match the specified prefix?
+		# @parameter prefix [String] The prefix to match against.
 		# @returns [Boolean]
 		def start_with?(prefix)
 			self.nested_name.start_with?(prefix)
 		end
 		
 		# Convert this definition into another kind of definition.
+		# @parameter kind [Symbol] The kind to convert to.
 		def convert(kind)
 			raise ArgumentError, "Unable to convert #{self} into #{kind}!"
 		end

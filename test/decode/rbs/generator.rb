@@ -90,7 +90,7 @@ describe Decode::RBS::Generator do
 				
 				result = output.string
 				expect(result).to be(:include?, "class Animal")
-				expect(result).to be(:include?, "class Dog < ::Animal")
+				expect(result).to be(:include?, "class Dog < Animal")
 			end
 		end
 	end

@@ -6,17 +6,20 @@
 require "rbs"
 require "console"
 require_relative "wrapper"
+require_relative "type"
 
 module Decode
 	module RBS
 		# Represents a Ruby method definition wrapper for RBS generation.
 		class Method < Wrapper
-			
 			# Initialize a new method wrapper.
 			# @parameter definition [Decode::Definition] The method definition to wrap.
 			def initialize(definition)
 				super
 				@signatures = nil
+				@keyword_arguments = nil
+				@return_type = nil
+				@parameters = nil
 			end
 			
 			# Extract method signatures from the method definition.
@@ -25,10 +28,28 @@ module Decode
 				@signatures ||= extract_signatures
 			end
 			
+			# Extract keyword arguments from the method definition.
+			# @returns [Hash] Hash with :required and :optional keys.
+			def keyword_arguments
+				@keyword_arguments ||= extract_keyword_arguments(@definition, nil)
+			end
+			
+			# Extract return type from the method definition.
+			# @returns [::RBS::Types::t] The RBS return type.
+			def return_type
+				@return_type ||= extract_return_type(@definition, nil) || ::RBS::Parser.parse_type("untyped")
+			end
+			
+			# Extract parameters from the method definition.
+			# @returns [Array] Array of RBS parameter objects.
+			def parameters
+				@parameters ||= extract_parameters(@definition, nil)
+			end
+			
 			# Convert the method definition to RBS AST
 			def to_rbs_ast(index = nil)
 				method_name = @definition.name
-				comment = extract_comment(@definition)
+				comment = self.comment
 				
 				overloads = []
 				if signatures.any?
@@ -40,8 +61,9 @@ module Decode
 						)
 					end
 				else
-					return_type = extract_return_type(@definition, index) || ::RBS::Parser.parse_type("untyped")
-					parameters = extract_parameters(@definition, index)
+					return_type = self.return_type
+					parameters = self.parameters
+					keywords = self.keyword_arguments
 					block_type = extract_block_type(@definition, index)
 					
 					method_type = ::RBS::MethodType.new(
@@ -51,8 +73,8 @@ module Decode
 							optional_positionals: [],
 							rest_positionals: nil,
 							trailing_positionals: [],
-							required_keywords: {},
-							optional_keywords: {},
+							required_keywords: keywords[:required],
+							optional_keywords: keywords[:optional],
 							rest_keywords: nil,
 							return_type: return_type
 						),
@@ -91,13 +113,23 @@ module Decode
 				# Look for @returns tags in the method's documentation
 				documentation = definition.documentation
 				
-				# Find @returns tag
-				returns_tag = documentation&.filter(Decode::Comment::Returns)&.first
+				# Find all @returns tags
+				returns_tags = documentation&.filter(Decode::Comment::Returns)&.to_a
 				
-				if returns_tag
-					# Parse the type from the tag
-					type_string = returns_tag.type.strip
-					parse_type_string(type_string)
+				if returns_tags&.any?
+					if returns_tags.length == 1
+						# Single return type
+						type_string = returns_tags.first.type.strip
+						Type.parse(type_string)
+					else
+						# Multiple return types - create union
+						types = returns_tags.map do |tag|
+							type_string = tag.type.strip
+							Type.parse(type_string)
+						end
+						
+						::RBS::Types::Union.new(types: types, location: nil)
+					end
 				else
 					# Infer return type based on method name patterns
 					infer_return_type(definition)
@@ -109,14 +141,15 @@ module Decode
 				documentation = definition.documentation
 				return [] unless documentation
 				
-				# Find @parameter tags
+				# Find @parameter tags (but not @option tags, which are handled separately)
 				param_tags = documentation.filter(Decode::Comment::Parameter).to_a
+				param_tags = param_tags.reject {|tag| tag.is_a?(Decode::Comment::Option)}
 				return [] if param_tags.empty?
 				
 				param_tags.map do |tag|
 					name = tag.name
 					type_string = tag.type.strip
-					type = parse_type_string(type_string)
+					type = Type.parse(type_string)
 					
 					::RBS::Types::Function::Param.new(
 						type: type,
@@ -124,6 +157,38 @@ module Decode
 					)
 				end
 			end
+			
+			# Extract keyword arguments from @option tags
+			def extract_keyword_arguments(definition, index)
+				documentation = definition.documentation
+				return { required: {}, optional: {} } unless documentation
+				
+				# Find @option tags
+				option_tags = documentation.filter(Decode::Comment::Option).to_a
+				return { required: {}, optional: {} } if option_tags.empty?
+				
+				keywords = { required: {}, optional: {} }
+				
+				option_tags.each do |tag|
+					name = tag.name.to_s
+					# Remove leading colon if present (e.g., ":cached" -> "cached")
+					name = name.sub(/\A:/, "")
+					
+					type_string = tag.type.strip
+					type = Type.parse(type_string)
+					
+					# Determine if the keyword is optional based on the type annotation
+					# If the type is nullable (contains nil or ends with ?), make it optional
+					if Type.nullable?(type)
+						keywords[:optional][name.to_sym] = type
+					else
+						keywords[:required][name.to_sym] = type
+					end
+				end
+				
+				keywords
+			end
+			
 			
 			# Extract block type from method documentation
 			def extract_block_type(definition, index)
@@ -138,7 +203,7 @@ module Decode
 				block_params = yields_tag.filter(Decode::Comment::Parameter).map do |param_tag|
 					name = param_tag.name
 					type_string = param_tag.type.strip
-					type = parse_type_string(type_string)
+					type = Type.parse(type_string)
 					
 					::RBS::Types::Function::Param.new(
 						type: type,
@@ -197,19 +262,6 @@ module Decode
 				
 				# Default to untyped
 				::RBS::Parser.parse_type("untyped")
-			end
-			
-			# Parse a type string and convert it to RBS type
-			def parse_type_string(type_string)
-				# This is for backwards compatibility with the old syntax, eventually we will emit warnings for these:
-				type_string = type_string.tr("()", "[]")
-				type_string.gsub!("| Nil", "| nil")
-				type_string.gsub!("Boolean", "bool")
-				
-				return ::RBS::Parser.parse_type(type_string)
-			rescue => error
-				Console.warn(self, "Failed to parse type string: #{type_string}", error)
-				return ::RBS::Parser.parse_type("untyped")
 			end
 			
 		end

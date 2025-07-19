@@ -14,12 +14,19 @@ module Decode
 			def initialize(definition)
 				@definition = definition
 				@tags = nil
+				@comment = nil
 			end
 			
 			# Extract RBS tags from the definition's documentation.
 			# @returns [Array<Comment::RBS>] The RBS tags found in the documentation.
 			def tags
 				@tags ||= extract_tags
+			end
+			
+			# Extract comment from the definition's documentation.
+			# @returns [RBS::AST::Comment | Nil] The RBS comment object.
+			def comment
+				@comment ||= extract_comment
 			end
 			
 			private

@@ -116,7 +116,7 @@ describe "RBS Integration" do
 			result = generate_rbs_for_ruby(ruby_code)
 			
 			expect(result).to be(:include?, "class Animal")
-			expect(result).to be(:include?, "class Dog < ::Animal")
+			expect(result).to be(:include?, "class Dog < Animal")
 			expect(result).to be(:include?, "def speak")
 		end
 	end
@@ -250,7 +250,7 @@ describe "RBS Integration" do
 			result = generator.generate(index, output: buffer)
 			
 			expect(buffer.string).to be(:include?, "class Animal")
-			expect(buffer.string).to be(:include?, "class Dog < ::Animal")
+			expect(buffer.string).to be(:include?, "class Dog < Animal")
 		end
 	end
 	

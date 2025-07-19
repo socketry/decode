@@ -11,6 +11,7 @@ require "decode/comment/rbs"
 require "decode/comment/text"
 require "decode/comment/returns"
 require "decode/comment/parameter"
+require "decode/comment/option"
 require "decode/comment/yields"
 
 describe Decode::RBS::Method do
@@ -87,73 +88,105 @@ describe Decode::RBS::Method do
 				expect(ast.comment.string).to be == "This is a test method"
 			end
 		end
+		
+		with "method with @option parameters and union return type" do
+			let(:comments) {[
+				"A method with options and multiple return types",
+				"@parameter name [String] The name parameter", 
+				"@option :format [Symbol] Required output format",
+				"@option :cached [Boolean?] Optional caching",
+				"@option :timeout [Integer | nil] Optional timeout",
+				"@returns [String]",
+				"@returns [nil]"
+			]}
+			
+			it "generates RBS AST with keyword arguments and union return type" do
+				ast = rbs_method.to_rbs_ast
+				
+				expect(ast).to be_a(::RBS::AST::Members::MethodDefinition)
+				expect(ast.name).to be == :test_method
+				expect(ast.overloads).to have_attributes(length: be == 1)
+				
+				overload = ast.overloads.first
+				function_type = overload.method_type.type
+				
+				# Check positional parameters
+				expect(function_type.required_positionals).to have_attributes(length: be == 1)
+				expect(function_type.required_positionals.first.name).to be == :name
+				
+				# Check required keyword arguments (non-nullable types)
+				expect(function_type.required_keywords).to have_attributes(length: be == 1)
+				expect(function_type.required_keywords.keys).to be == [:format]
+				
+				# Check optional keyword arguments (nullable types)
+				expect(function_type.optional_keywords).to have_attributes(length: be == 2)
+				expect(function_type.optional_keywords.keys).to be == [:cached, :timeout]
+				
+				# Check union return type
+				expect(function_type.return_type).to be_a(::RBS::Types::Union)
+				expect(function_type.return_type.types).to have_attributes(length: be == 2)
+			end
+		end
 	end
 	
 	with "private methods" do
-		with "#infer_return_type" do
-			with "boolean method" do
-				let(:bool_definition) {Decode::Language::Ruby::Method.new([:empty?], comments: comments, language: language)}
-				let(:bool_method) {subject.new(bool_definition)}
-				
-				it "infers boolean return type for methods ending with ?" do
-					return_type = bool_method.send(:infer_return_type, bool_definition)
-					expect(return_type.to_s).to be == "bool"
-				end
-			end
-			
-			with "initialize method" do
-				let(:init_definition) {Decode::Language::Ruby::Method.new([:initialize], comments: comments, language: language)}
-				let(:init_method) {subject.new(init_definition)}
-				
-				it "infers void return type for initialize method" do
-					return_type = init_method.send(:infer_return_type, init_definition)
-					expect(return_type.to_s).to be == "void"
-				end
-			end
-			
-			with "self-returning method" do
-				let(:append_definition) {Decode::Language::Ruby::Method.new([:append], comments: comments, language: language)}
-				let(:append_method) {subject.new(append_definition)}
-				
-				it "infers self return type for mutating methods" do
-					return_type = append_method.send(:infer_return_type, append_definition)
-					expect(return_type.to_s).to be == "self"
-				end
-			end
-			
-			with "default method" do
-				it "infers untyped return type for default methods" do
-					return_type = rbs_method.send(:infer_return_type, definition)
-					expect(return_type.to_s).to be == "untyped"
-				end
-			end
-		end
 		
-		with "#extract_return_type" do
+		
+		with "#return_type" do
 			with "method with @returns tag" do
-				let(:comments) {["@returns String"]}
+				let(:comments) {["@returns [String]"]}
 				
 				it "extracts return type from @returns tag" do
-					return_type = rbs_method.send(:extract_return_type, definition, nil)
+					return_type = rbs_method.return_type
 					expect(return_type).not.to be_nil
 					# The exact type depends on the RBS::Parser.parse_type implementation
 				end
 			end
 			
+			with "method with multiple @returns tags" do
+				let(:comments) {["@returns [String]", "@returns [Integer]"]}
+				
+				it "creates union type for multiple return types" do
+					return_type = rbs_method.return_type
+					expect(return_type).to be_a(::RBS::Types::Union)
+					expect(return_type.types).to have_attributes(length: be == 2)
+				end
+			end
+			
+			with "method with multiple @returns tags of different types" do
+				let(:comments) {["@returns [String]", "@returns [Integer]", "@returns [nil]"]}
+				
+				it "creates union type with all specified types" do
+					return_type = rbs_method.return_type
+					expect(return_type).to be_a(::RBS::Types::Union)
+					expect(return_type.types).to have_attributes(length: be == 3)
+				end
+			end
+			
 			with "method without @returns tag" do
 				it "falls back to inferred return type" do
-					return_type = rbs_method.send(:extract_return_type, definition, nil)
+					return_type = rbs_method.return_type
 					expect(return_type.to_s).to be == "untyped"
 				end
 			end
 		end
 		
-		with "#extract_parameters" do
+		with "#parameters" do
 			with "method with @parameter tags" do
 				let(:comments) {["@parameter name [String] The name parameter"]}
 				
 				it "extracts parameters from @parameter tags" do
-					parameters = rbs_method.send(:extract_parameters, definition, nil)
+					parameters = rbs_method.parameters
+					expect(parameters).to have_attributes(length: be == 1)
+					expect(parameters.first.name).to be == :name
+				end
+			end
+			
+			with "method with @parameter and @option tags" do
+				let(:comments) {["@parameter name [String] The name parameter", "@option :cached [Boolean] Whether to cache"]}
+				
+				it "only extracts @parameter tags, not @option tags" do
+					parameters = rbs_method.parameters
 					expect(parameters).to have_attributes(length: be == 1)
 					expect(parameters.first.name).to be == :name
 				end
@@ -161,11 +194,68 @@ describe Decode::RBS::Method do
 			
 			with "method without @parameter tags" do
 				it "returns empty array when no parameter tags" do
-					parameters = rbs_method.send(:extract_parameters, definition, nil)
+					parameters = rbs_method.parameters
 					expect(parameters).to be == []
 				end
 			end
 		end
+		
+		with "#keyword_arguments" do
+			with "method with required @option tags" do
+				let(:comments) {["@option :format [Symbol] The output format", "@option :mode [String] Processing mode"]}
+				
+				it "extracts required keyword arguments from non-nullable @option tags" do
+					keywords = rbs_method.keyword_arguments
+					expect(keywords[:required]).to have_attributes(length: be == 2)
+					expect(keywords[:required].keys).to be == [:format, :mode]
+					expect(keywords[:optional]).to have_attributes(length: be == 0)
+				end
+			end
+			
+			with "method with optional @option tags" do
+				let(:comments) {["@option :cached [Boolean?] Whether to cache the result", "@option :timeout [Integer | nil] Request timeout"]}
+				
+				it "extracts optional keyword arguments from nullable @option tags" do
+					keywords = rbs_method.keyword_arguments
+					expect(keywords[:optional]).to have_attributes(length: be == 2)
+					expect(keywords[:optional].keys).to be == [:cached, :timeout]
+					expect(keywords[:required]).to have_attributes(length: be == 0)
+				end
+			end
+			
+			with "method with mixed required and optional @option tags" do
+				let(:comments) {["@option :format [Symbol] Required format", "@option :validate [Boolean?] Optional validation"]}
+				
+				it "correctly separates required and optional keyword arguments" do
+					keywords = rbs_method.keyword_arguments
+					expect(keywords[:required]).to have_attributes(length: be == 1)
+					expect(keywords[:required].keys).to be == [:format]
+					expect(keywords[:optional]).to have_attributes(length: be == 1)
+					expect(keywords[:optional].keys).to be == [:validate]
+				end
+			end
+			
+			with "method with @option tags without leading colon" do
+				let(:comments) {["@option cached [Boolean?] Whether to cache the result"]}
+				
+				it "handles option names without leading colon" do
+					keywords = rbs_method.keyword_arguments
+					expect(keywords[:optional]).to have_attributes(length: be == 1)
+					expect(keywords[:optional].keys).to be == [:cached]
+				end
+			end
+			
+			with "method without @option tags" do
+				it "returns empty keyword hashes when no option tags" do
+					keywords = rbs_method.keyword_arguments
+					expect(keywords[:optional]).to have_attributes(length: be == 0)
+					expect(keywords[:required]).to have_attributes(length: be == 0)
+				end
+			end
+			
+		end
+		
+		
 		
 		with "#extract_block_type" do
 			with "method with @yields tag" do
@@ -186,19 +276,13 @@ describe Decode::RBS::Method do
 			end
 		end
 		
-		with "#parse_type_string" do
-			it "parses valid type strings" do
-				type = rbs_method.send(:parse_type_string, "String")
-				expect(type).not.to be_nil
-			end
-		end
 		
-		with "#extract_comment" do
+		with "#comment" do
 			with "method with text documentation" do
 				let(:comments) {["Test method comment"]}
 				
 				it "extracts comment from documentation" do
-					comment = rbs_method.send(:extract_comment, definition)
+					comment = rbs_method.comment
 					
 					expect(comment).to be_a(::RBS::AST::Comment)
 					expect(comment.string).to be == "Test method comment"
@@ -207,7 +291,7 @@ describe Decode::RBS::Method do
 			
 			with "method without documentation" do
 				it "returns nil when no documentation" do
-					comment = rbs_method.send(:extract_comment, definition)
+					comment = rbs_method.comment
 					expect(comment).to be_nil
 				end
 			end

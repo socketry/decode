@@ -12,7 +12,7 @@ module Decode
 			class Reference < Language::Reference
 				# Create a reference from a constant node.
 				# @parameter node [Prism::Node] The constant node.
-				# @parameter language [Language] The language instance.
+				# @parameter language [Language::Generic] The language instance.
 				def self.from_const(node, language)
 					lexical_path = append_const(node)
 					
@@ -22,6 +22,7 @@ module Decode
 				# Append a constant node to the path.
 				# @parameter node [Prism::Node] The constant node.
 				# @parameter path [Array] The path to append to.
+				# @returns [Array] The path with constant information appended.
 				def self.append_const(node, path = [])
 					case node.type
 					when :constant_read_node
