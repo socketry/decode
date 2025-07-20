@@ -73,3 +73,55 @@ steep check
 2. Run `steep check lib` to identify issues
 3. Fix structural problems (inheritance, missing docs)
 4. Iterate until clean validation
+
+### Deploymnet
+
+Make sure `bake-test-types` is added to the `test` group in `gems.rb` (or `Gemfile`).
+
+```ruby
+group :test do
+	# ...
+	gem "bake-test"
+	gem "bake-test-external"
+	gem "bake-test-types"
+	# ...
+end
+```
+
+Then, create `.github/workflows/test-types.yaml`:
+
+```yaml
+name: Test Types
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+env:
+  CONSOLE_OUTPUT: XTerm
+
+jobs:
+  test:
+    name: ${{matrix.ruby}} on ${{matrix.os}}
+    runs-on: ${{matrix.os}}-latest
+    
+    strategy:
+      matrix:
+        os:
+          - ubuntu
+        
+        ruby:
+          - "3.4"
+    
+    steps:
+    - uses: actions/checkout@v4
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{matrix.ruby}}
+        bundler-cache: true
+    
+    - name: Run tests
+      timeout-minutes: 10
+      run: bundle exec bake test:types
+```

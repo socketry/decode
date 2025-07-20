@@ -25,10 +25,10 @@ group :test do
 	gem "rubocop"
 	gem "rubocop-socketry"
 	
-	gem "steep"
-	
 	gem "bake-test"
 	gem "bake-test-external"
+	
+	gem "steep"
 	
 	gem "build-files"
 end
