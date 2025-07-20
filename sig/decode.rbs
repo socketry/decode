@@ -390,7 +390,7 @@ module Decode
       @tags: Comment::Tags
 
       # Initialize a new generic language.
-      public def initialize: (String, ?extensions: Array[String], ?tags: Comment::Tags) -> void
+      public def initialize: (String name, ?extensions: Array[String], ?tags: Comment::Tags) -> void
 
       # Get all names for this language.
       public def names: () -> Array[String]
@@ -409,7 +409,7 @@ module Decode
       public def segments_for: (Source source) { (Segment segment) -> void } -> Enumerator[Segment]
 
       # Generate a code representation with syntax highlighting and link resolution.
-      public def code_for: (String text, Index index, ?relative_to: Definition) -> Code
+      public def code_for: (String text, Index index, ?relative_to: Definition) -> untyped
     end
 
     # An reference which can be resolved to zero or more definitions.
@@ -587,13 +587,13 @@ module Decode
         @language: Language::Generic
 
         # Initialize a new code block.
-        public def initialize: (String, Index, language: Language::Generic, ?relative_to: Definition?) -> void
+        public def initialize: (String text, Index index, language: Language::Generic, ?relative_to: Definition?) -> void
 
         # Extract definitions from the code.
-        public def extract: (?Array[untyped]) -> Array[untyped]
+        public def extract: (?Array into) -> Array
 
         # Traverse the syntax tree and extract definitions.
-        private def traverse: (untyped, Array[untyped]) -> void
+        private def traverse: (untyped node, Array into) -> self
       end
 
       # A Ruby-specific constant.
@@ -782,10 +782,10 @@ module Decode
       # An Ruby-specific reference which can be resolved to zero or more definitions.
       class Reference < Language::Reference
         # Create a reference from a constant node.
-        public def self.from_const: (untyped node, Language::Generic language) -> Reference
+        public def self.from_const: (Prism::Node node, Language::Generic language) -> Reference
 
         # Append a constant node to the path.
-        public def self.append_const: (untyped, ?Array[untyped]) -> Array[untyped]
+        public def self.append_const: (Prism::Node node, ?Array path) -> Array
 
         # Split a Ruby identifier into prefix and name components.
         public def split: (String text) -> Array
@@ -873,13 +873,13 @@ module Decode
 
       private def extract_generics: () -> untyped
 
-      # Build a constant RBS declaration
+      # Build a constant RBS declaration.
       private def build_constant_rbs: (untyped constant_definition) -> untyped
 
-      # Convert a simple name to RBS TypeName (not qualified)
+      # Convert a simple name to RBS TypeName (not qualified).
       private def simple_name_to_rbs: (untyped name) -> untyped
 
-      # Build attribute RBS declarations and infer instance variable types
+      # Build attribute RBS declarations and infer instance variable types.
       private def build_attributes_rbs: (Array attribute_definitions) -> Array
 
       # Convert a qualified name to RBS TypeName
@@ -943,36 +943,36 @@ module Decode
       # Convert the method definition to RBS AST
       public def to_rbs_ast: (?untyped index) -> untyped
 
-      # Build a complete RBS function type from AST information
+      # Build a complete RBS function type from AST information.
       public def build_function_type_from_ast: (Definition definition, Index index) -> RBS::Types::Function
 
       private def extract_signatures: () -> untyped
 
-      # Extract return type from method documentation
+      # Extract return type from method documentation.
       private def extract_return_type: (untyped definition, untyped index) -> untyped
 
-      # Extract parameter types from method documentation
+      # Extract parameter types from method documentation.
       private def extract_parameters: (untyped definition, untyped index) -> untyped
 
-      # Extract parameter information from the Prism AST node
+      # Extract parameter information from the Prism AST node.
       private def extract_parameters_from_ast: (Definition definition) -> Array
 
-      # Extract keyword arguments from @option tags and AST
+      # Extract keyword arguments from @option tags and AST.
       private def extract_keyword_arguments: (untyped definition, untyped index) -> untyped
 
-      # Extract keyword arguments from the Prism AST node
+      # Extract keyword arguments from the Prism AST node.
       private def extract_keyword_arguments_from_ast: (Definition definition) -> Hash
 
-      # Extract documented parameter types into a hash for lookup
+      # Extract documented parameter types into a hash for lookup.
       private def extract_documented_parameter_types: (Definition definition) -> Hash
 
-      # Make a type optional if it's not already nullable
+      # Make a type optional if it's not already nullable.
       private def make_type_optional_if_needed: (RBS::Types::t type) -> RBS::Types::t
 
-      # Extract block type from method documentation
+      # Extract block type from method documentation.
       private def extract_block_type: (untyped definition, untyped index) -> untyped
 
-      # Infer return type based on method patterns and heuristics
+      # Infer return type based on method patterns and heuristics.
       private def infer_return_type: (untyped definition) -> untyped
     end
 
@@ -984,13 +984,13 @@ module Decode
       # Convert the module definition to RBS AST
       public def to_rbs_ast: (?Array[Method] method_definitions, ?Array[Constant] constant_definitions, ?Array[Attribute] attribute_definitions, ?Index? index) -> RBS::AST::Declarations::Module
 
-      # Build a constant RBS declaration
+      # Build a constant RBS declaration.
       private def build_constant_rbs: (untyped constant_definition) -> untyped
 
-      # Convert a simple name to RBS TypeName (not qualified)
+      # Convert a simple name to RBS TypeName (not qualified).
       private def simple_name_to_rbs: (untyped name) -> untyped
 
-      # Build attribute RBS declarations and infer instance variable types
+      # Build attribute RBS declarations and infer instance variable types.
       private def build_attributes_rbs: (Array attribute_definitions) -> Array
     end
 
