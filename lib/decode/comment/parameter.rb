@@ -12,6 +12,7 @@ module Decode
 		# - `@parameter age [Float] The users age.`
 		#
 		class Parameter < Tag
+			# @constant [Regexp] Pattern for matching parameter declarations.
 			PATTERN = /\A(?<name>.*?)\s+\[#{Tag.bracketed_content(:type)}\](\s+(?<details>.*?))?\Z/
 			
 			# Build a parameter from a directive and regex match.
@@ -19,7 +20,10 @@ module Decode
 			# @parameter match [MatchData] The regex match data containing name, type, and details.
 			# @returns [Parameter] A new parameter object.
 			def self.build(directive, match)
-				node = self.new(directive, match[:name], match[:type])
+				name = match[:name] or raise ArgumentError, "Missing name in parameter match!"
+				type = match[:type] or raise ArgumentError, "Missing type in parameter match!"
+				
+				node = self.new(directive, name, type)
 				
 				if details = match[:details]
 					node.add(Text.new(details))

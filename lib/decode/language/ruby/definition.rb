@@ -31,13 +31,25 @@ module Decode
 				attr_accessor :visibility
 				
 				# Check if this definition is public.
-				# @returns [Boolean] True if the definition is public.
+				# @returns [bool] True if the definition is public.
 				def public?
 					@visibility == :public
 				end
 				
+				# Check if this definition is protected.
+				# @returns [bool] True if the definition is protected.
+				def protected?
+					@visibility == :protected
+				end
+				
+				# Check if this definition is private.
+				# @returns [bool] True if the definition is private.
+				def private?
+					@visibility == :private
+				end
+				
 				# Check if this definition spans multiple lines.
-				# @returns [Boolean] True if the definition spans multiple lines.
+				# @returns [bool] True if the definition spans multiple lines.
 				def multiline?
 					@node.location.start_line != @node.location.end_line
 				end
@@ -63,7 +75,7 @@ module Decode
 				end
 				
 				# Get the location of this definition.
-				# @returns [Location | Nil] The location object if source is available.
+				# @returns [Location?] The location object if source is available.
 				def location
 					if @source and location = @node&.location
 						Location.new(@source.path, location.start_line)

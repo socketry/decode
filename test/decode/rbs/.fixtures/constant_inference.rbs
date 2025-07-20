@@ -1,0 +1,23 @@
+module TestModule
+  # A test class demonstrating constant type inference.
+  class TestClass
+    CONFIG_FILE: String
+
+    MAX_RETRIES: Integer
+
+    DEFAULT_CONFIG: Hash[Symbol, String]
+
+    SUPPORTED_FORMATS: Array[String]
+
+    FLEXIBLE_VALUE: String | Integer?
+  end
+
+  # A test module with constants.
+  module ConfigModule
+    DEFAULT_TIMEOUT: Integer
+
+    DEBUG_MODE: bool
+
+    IDENTIFIER_PATTERN: Regexp
+  end
+end

@@ -9,7 +9,7 @@ module Decode
 	module Comment
 		# Describes a method option (keyword argument).
 		#
-		# - `@option :cached [Boolean] Whether to cache the value.`
+		# - `@option :cached [bool] Whether to cache the value.`
 		#
 		class Option < Parameter
 		end

@@ -14,19 +14,22 @@ module Decode
 				@matches = []
 			end
 			
+			# @attribute [String] The text to rewrite.
 			attr :text
 			
+			# @attribute [Array[Match]] The matches to apply.
 			attr :matches
 			
 			# Add a match to the rewriter.
 			# @parameter match [Match] The match to add.
 			def << match
 				@matches << match
+				return self
 			end
 			
 			# Returns a chunk of raw text with no formatting.
 			def text_for(range)
-				@text[range]
+				@text[range] || ""
 			end
 			
 			# Apply all matches to generate the rewritten output.

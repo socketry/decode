@@ -18,13 +18,13 @@ class Container
 	end
 	
 	# Get the first item.
-	# @returns [T | Nil] The first item or nil if empty.
+	# @returns [T?] The first item or nil if empty.
 	def first
 		@items.first
 	end
 	
 	# Check if the container is empty.
-	# @returns [Boolean] True if empty.
+	# @returns [bool] True if empty.
 	def empty?
 		@items.empty?
 	end

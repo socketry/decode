@@ -102,6 +102,56 @@ describe Decode::RBS::Module do
 					expect(comment.string).to be == "First line\nSecond line"
 				end
 			end
+			
+			with "#build_constant_rbs (constant type inference in modules)" do
+				with "module constants with type annotations" do
+					let(:language) {Decode::Language::Ruby.new}
+					let(:comments) {["@constant [Integer] The default timeout value."]}
+					let(:const_definition) {Decode::Language::Ruby::Constant.new([:DEFAULT_TIMEOUT], comments: comments, language: language)}
+					let(:definition) {Decode::Language::Ruby::Module.new([:TestModule], language: language)}
+					let(:rbs_module) {subject.new(definition)}
+					
+					it "generates constant RBS declaration in modules" do
+						constant_rbs = rbs_module.send(:build_constant_rbs, const_definition)
+						
+						expect(constant_rbs).to be_a(::RBS::AST::Declarations::Constant)
+						expect(constant_rbs.name).to be == :DEFAULT_TIMEOUT
+						expect(constant_rbs.type).to be_a(::RBS::Types::ClassInstance)
+					end
+				end
+				
+				with "module constants without annotations" do
+					let(:language) {Decode::Language::Ruby.new}
+					let(:comments) {["Regular comment without @constant tag."]}
+					let(:const_definition) {Decode::Language::Ruby::Constant.new([:REGULAR_CONSTANT], comments: comments, language: language)}
+					let(:definition) {Decode::Language::Ruby::Module.new([:TestModule], language: language)}
+					let(:rbs_module) {subject.new(definition)}
+					
+					it "ignores module constants without @constant annotations" do
+						constant_rbs = rbs_module.send(:build_constant_rbs, const_definition)
+						expect(constant_rbs).to be_nil
+					end
+				end
+			end
+			
+			with "#to_rbs_ast with constant definitions in modules" do
+				let(:language) {Decode::Language::Ruby.new}
+				let(:comments) {["@constant [String] The module version."]}
+				let(:const_definition) {Decode::Language::Ruby::Constant.new([:VERSION], comments: comments, language: language)}
+				let(:definition) {Decode::Language::Ruby::Module.new([:TestModule], language: language)}
+				let(:rbs_module) {subject.new(definition)}
+				
+				it "includes constants in generated module AST members" do
+					ast = rbs_module.to_rbs_ast([], [const_definition], [])
+					
+					# Should include constants in module members
+					constants = ast.members.select {|m| m.is_a?(::RBS::AST::Declarations::Constant)}
+					
+					expect(constants).to have_attributes(length: be == 1)
+					expect(constants.first.name).to be == :VERSION
+					expect(constants.first.type).to be_a(::RBS::Types::ClassInstance)
+				end
+			end
 		end
 	end
 end

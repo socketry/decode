@@ -8,49 +8,67 @@ module Decode
 		# Represents a node in a comment tree structure.
 		class Node
 			# Initialize the node.
-			# @parameter children [Array(Node) | Nil]
-			def initialize(children = nil)
+			# @parameter children [Array(Node | Text)?] The initial children array containing both structured nodes and text content.
+			def initialize(children)
 				@children = children
 			end
 			
 			# Whether this node has any children nodes.
 			# Ignores {Text} instances.
-			# @returns [Boolean]
+			# @returns [bool]
 			def children?
-				@children&.any?{|child| child.is_a?(Node)}
+				@children&.any?{|child| child.is_a?(Node)} || false
 			end
 			
 			# Add a child node to this node.
-			# @parameter child [Node] The node to add.
+			# @parameter child [Node | Text] The node to add.
 			def add(child)
-				@children ||= []
-				@children << child
+				if children = @children
+					children << child
+				else
+					@children = [child]
+				end
+				
+				return self
 			end
 			
-			# @attribute [Array(Node | Text) | Nil] Any children of this node.
+			# Contains a mix of Node objects (structured comment tags like `@parameter`, `@returns`) and Text objects (plain comment text and tag descriptions).
+			# @attribute [Array(Node | Text)?] The children of this node.
 			attr :children
 			
 			# Enumerate all non-text children nodes.
+			# @yields {|node| process each node}
+			# 	@parameter node [Node] A structured child node (Text nodes are filtered out).
+			# @returns [Enumerator(Node)] Returns an enumerator if no block given.
+			# @returns [self] Otherwise returns self.
 			def each(&block)
 				return to_enum unless block_given?
 				
 				@children&.each do |child|
 					yield child if child.is_a?(Node)
 				end
+				
+				return self
 			end
 			
 			# Filter children nodes by class type.
 			# @parameter klass [Class] The class to filter by.
+			# @yields {|node| process each filtered node}
+			# 	@parameter node [Object] A child node that is an instance of klass.
+			# @returns [Enumerator(Node)] Returns an enumerator if no block given.
+			# @returns [self] Otherwise returns self.
 			def filter(klass)
 				return to_enum(:filter, klass) unless block_given?
 				
 				@children&.each do |child|
 					yield child if child.is_a?(klass)
 				end
+				
+				return self
 			end
 			
 			# Any lines of text associated with this node.
-			# @returns [Array(String) | Nil] The lines of text.
+			# @returns [Array(String)?] The lines of text.
 			def text
 				if text = self.extract_text
 					return text if text.any?
@@ -70,11 +88,13 @@ module Decode
 			
 			protected
 			
+			# Extract text lines from Text children of this node.
+			# @returns [Array(String)?] Array of text lines, or nil if no children.
 			def extract_text
 				if children = @children
-					@children.select{|child| child.kind_of?(Text)}.map(&:line)
-				else
-					nil
+					children.filter_map do |child|
+						child.line if child.is_a?(Text)
+					end
 				end
 			end
 		end

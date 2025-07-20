@@ -1,5 +1,11 @@
 # Releases
 
+## Unreleased
+
+  - Add support for `@constant [Type] Description.` tags.
+  - Add support for instance variable type inference from `@attribute` tags.
+  - Add support for method visibility in RBS output.
+
 ## v0.24.0
 
 ### Introduce support for RBS signature generation

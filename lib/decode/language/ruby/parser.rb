@@ -25,7 +25,7 @@ module Decode
 			# The Ruby source code parser.
 			class Parser
 				# Initialize a new Ruby parser.
-				# @parameter language [Language] The language instance.
+				# @parameter language [Language::Generic] The language instance.
 				def initialize(language)
 					@language = language
 					
@@ -33,7 +33,26 @@ module Decode
 					@definitions = Hash.new.compare_by_identity
 				end
 				
+				# @attribute [Language::Generic] The language instance.
+				attr :language
+				
+				# @attribute [Symbol] The current visibility mode.
+				attr :visibility
+				
+				# @attribute [Hash] Cache for definition lookups.
+				attr :definitions
+				
+				# Parse the source code using Prism.
+				# @parameter source [Source] The source to parse.
+				# @returns [untyped] The parsed syntax tree.
+				def parse_source(source)
+					text = source.read
+					return ::Prism.parse(text)
+				end
+				
 				# Extract definitions from the given input file.
+				# @parameter source [Source] The source file to parse.
+				# @returns [Enumerator[Definition]] An enumerator of definitions.
 				def definitions_for(source, &block)
 					return enum_for(:definitions_for, source) unless block_given?
 					
@@ -46,6 +65,9 @@ module Decode
 				end
 				
 				# Walk over the syntax tree and extract relevant definitions with their associated comments.
+				# @parameter node [untyped] The syntax tree node to walk.
+				# @parameter parent [Definition?] The parent definition.
+				# @parameter source [Source?] The source file for location tracking.
 				def walk_definitions(node, parent = nil, source = nil, &block)
 					# Check for scope definitions from comments
 					if node.comments.any?
@@ -71,13 +93,13 @@ module Decode
 						path = nested_path_for(node.constant_path)
 						
 						definition = Module.new(path,
-							visibility: :public,
-							comments: comments_for(node),
-							parent: parent,
-							node: node,
-							language: @language,
-							source: source,
-						)
+									visibility: :public,
+									comments: comments_for(node),
+									parent: parent,
+									node: node,
+									language: @language,
+									source: source,
+								)
 						
 						store_definition(parent, path.last.to_sym, definition)
 						yield definition
@@ -92,14 +114,14 @@ module Decode
 						super_class = nested_name_for(node.superclass)
 						
 						definition = Class.new(path,
-							super_class: super_class,
-							visibility: :public, 
-							comments: comments_for(node),
-							parent: parent,
-							node: node,
-							language: @language,
-							source: source,
-						)
+									super_class: super_class,
+									visibility: :public, 
+									comments: comments_for(node),
+									parent: parent,
+									node: node,
+									language: @language,
+									source: source,
+								)
 						
 						store_definition(parent, path.last.to_sym, definition)
 						yield definition
@@ -112,13 +134,13 @@ module Decode
 					when :singleton_class_node
 						if name = singleton_name_for(node)
 							definition = Singleton.new(name,
-								comments: comments_for(node),
-								parent: parent,
-								node: node,
-								language: @language,
-								visibility: :public,
-								source: source
-							)
+										comments: comments_for(node),
+										parent: parent,
+										node: node,
+										language: @language,
+										visibility: :public,
+										source: source
+									)
 							
 							yield definition
 							
@@ -130,23 +152,23 @@ module Decode
 						receiver = receiver_for(node.receiver)
 						
 						definition = Method.new(node.name,
-							visibility: @visibility,
-							comments: comments_for(node),
-							parent: parent,
-							node: node,
-							language: @language,
-							receiver: receiver,
-							source: source,
-						)
+									visibility: @visibility,
+									comments: comments_for(node),
+									parent: parent,
+									node: node,
+									language: @language,
+									receiver: receiver,
+									source: source,
+								)
 						
 						yield definition
 					when :constant_write_node
 						definition = Constant.new(node.name,
-							comments: comments_for(node),
-							parent: parent,
-							node: node,
-							language: @language,
-						)
+									comments: comments_for(node),
+									parent: parent,
+									node: node,
+									language: @language,
+								)
 						
 						store_definition(parent, node.name, definition)
 						yield definition
@@ -165,13 +187,13 @@ module Decode
 										receiver = receiver_for(argument_node.receiver)
 										
 										definition = Method.new(argument_node.name,
-											visibility: name,
-											comments: comments_for(argument_node),
-											parent: parent,
-											node: argument_node,
-											language: @language,
-											receiver: receiver,
-										)
+													visibility: name,
+													comments: comments_for(argument_node),
+													parent: parent,
+													node: argument_node,
+													language: @language,
+													receiver: receiver,
+												)
 										
 										yield definition
 									end
@@ -195,9 +217,9 @@ module Decode
 							end
 						when :attr, :attr_reader, :attr_writer, :attr_accessor
 							definition = Attribute.new(attribute_name_for(node),
-								comments: comments_for(node),
-								parent: parent, language: @language, node: node
-							)
+										comments: comments_for(node),
+										parent: parent, language: @language, node: node
+									)
 							
 							yield definition
 						when :alias_method
@@ -211,13 +233,13 @@ module Decode
 								old_name = symbol_name_for(old_name_arg)
 								
 								definition = Alias.new(new_name.to_sym, old_name.to_sym,
-									comments: comments_for(node),
-									parent: parent,
-									node: node,
-									language: @language,
-									visibility: @visibility,
-									source: source,
-								)
+											comments: comments_for(node),
+											parent: parent,
+											node: node,
+											language: @language,
+											visibility: @visibility,
+											source: source,
+										)
 								
 								yield definition
 							end
@@ -230,10 +252,10 @@ module Decode
 							
 							if has_name_comment || has_attribute_comment || has_block
 								definition = Call.new(
-									attribute_name_for(node),
-									comments: comments_for(node),
-									parent: parent, language: @language, node: node
-								)
+											attribute_name_for(node),
+											comments: comments_for(node),
+											parent: parent, language: @language, node: node
+										)
 								
 								yield definition
 								
@@ -249,13 +271,13 @@ module Decode
 						old_name = node.old_name.unescaped
 						
 						definition = Alias.new(new_name.to_sym, old_name.to_sym,
-							comments: comments_for(node),
-							parent: parent,
-							node: node,
-							language: @language,
-							visibility: @visibility,
-							source: source,
-						)
+									comments: comments_for(node),
+									parent: parent,
+									node: node,
+									language: @language,
+									visibility: @visibility,
+									source: source,
+								)
 						
 						yield definition
 					when :if_node
@@ -286,13 +308,15 @@ module Decode
 				end
 				
 				# Extract segments from the given input file.
+				# @parameter source [Source] The source file to parse.
+				# @returns [Enumerator[Segment]] An enumerator of segments.
 				def segments_for(source, &block)
 					result = self.parse_source(source)
 					comments = result.comments.reject do |comment|
 						comment.location.slice.start_with?("#!/") || 
-						comment.location.slice.start_with?("# frozen_string_literal:") ||
-						comment.location.slice.start_with?("# Released under the MIT License.") ||
-						comment.location.slice.start_with?("# Copyright,")
+								comment.location.slice.start_with?("# frozen_string_literal:") ||
+								comment.location.slice.start_with?("# Released under the MIT License.") ||
+								comment.location.slice.start_with?("# Copyright,")
 					end
 					
 					# Now we iterate over the syntax tree and generate segments:
@@ -304,14 +328,16 @@ module Decode
 				# Extract clean comment text from a node by removing leading # symbols and whitespace.
 				# Only returns comments that directly precede the node (i.e., are adjacent to it).
 				# @parameter node [Node] The AST node with comments.
-				# @returns [Array] Array of cleaned comment strings.
+				# Extract comments that directly precede a node.
+				# @parameter node [untyped] The syntax tree node.
+				# @returns [Array[String]] Array of cleaned comment strings.
 				def comments_for(node)
 					# Find the node's starting line
 					node_start_line = node.location.start_line
 					
 					# Filter comments to only include those that directly precede the node
 					# We work backwards from the line before the node to find consecutive comments
-					adjacent_comments = []
+					adjacent_comments = [] #: Array[String]
 					expected_line = node_start_line - 1
 					
 					# Process comments in reverse order to work backwards from the node
@@ -337,16 +363,31 @@ module Decode
 					end
 				end
 				
+				# Assign a definition to a parent scope.
+				# @parameter parent [Definition?] The parent definition.
+				# @parameter definition [Definition] The definition to assign.
 				def assign_definition(parent, definition)
-					(@definitions[parent] ||= {})[definition.name] = definition
+					parent_definitions = @definitions[parent] ||= {}
+					parent_definitions[definition.name] = definition
 				end
 				
+				# Look up a definition in the parent scope.
+				# @parameter parent [Definition?] The parent definition.
+				# @parameter name [Symbol] The definition name to look up.
+				# @returns [Definition?] The found definition, if any.
 				def lookup_definition(parent, name)
-					(@definitions[parent] ||= {})[name]
+					if parent_definitions = @definitions[parent]
+						return parent_definitions[name]
+					end
 				end
 				
+				# Store a definition in the parent scope.
+				# @parameter parent [Definition?] The parent definition.
+				# @parameter name [Symbol] The definition name.
+				# @parameter definition [Definition] The definition to store.
 				def store_definition(parent, name, definition)
-					(@definitions[parent] ||= {})[name] = definition
+					parent_definitions = @definitions[parent] ||= {}
+					parent_definitions[name] = definition
 				end
 				
 				# Parse the given source object, can be a string or a Source instance.
@@ -363,8 +404,8 @@ module Decode
 					saved_visibility = @visibility
 					@visibility = visibility
 					yield
-				ensure
-					@visibility = saved_visibility
+						ensure
+							@visibility = saved_visibility
 				end
 				
 				NAME_ATTRIBUTE = /\A@name\s+(?<value>.*?)\Z/
@@ -441,9 +482,9 @@ module Decode
 				end
 				
 				KIND_ATTRIBUTE = /\A
-					(@(?<kind>attribute)\s+(?<value>.*?))|
-					(@define\s+(?<kind>)\s+(?<value>.*?))
-				\Z/x
+							(@(?<kind>attribute)\s+(?<value>.*?))|
+							(@define\s+(?<kind>)\s+(?<value>.*?))
+						\Z/x
 				
 				def kind_for(node, comments = nil)
 					comments&.each do |comment|
@@ -456,8 +497,8 @@ module Decode
 				end
 				
 				SCOPE_ATTRIBUTE = /\A
-					@scope\s+(?<names>.*?)
-				\Z/x
+							@scope\s+(?<names>.*?)
+						\Z/x
 				
 				def scope_for(comments, parent = nil, &block)
 					comments&.each do |comment|
@@ -509,20 +550,20 @@ module Decode
 								# Start a new segment with these comments
 								yield current_segment if current_segment
 								current_segment = Segment.new(
-									preceding_comments.map{|comment| comment.location.slice.sub(/^#[\s\t]?/, "")},
-									@language,
-									statement
-								)
+											preceding_comments.map{|comment| comment.location.slice.sub(/^#[\s\t]?/, "")},
+											@language,
+											statement
+										)
 							elsif current_segment
 								# Extend current segment with this statement
 								current_segment.expand(statement)
 							else
 								# Start a new segment without comments
 								current_segment = Segment.new(
-									[],
-									@language,
-									statement
-								)
+											[],
+											@language,
+											statement
+										)
 							end
 						end
 						
@@ -530,10 +571,10 @@ module Decode
 					else
 						# One top level segment:
 						segment = Segment.new(
-							[],
-							@language,
-							node
-						)
+									[],
+									@language,
+									node
+								)
 						
 						yield segment
 					end

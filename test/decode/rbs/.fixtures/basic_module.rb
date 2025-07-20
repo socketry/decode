@@ -14,7 +14,7 @@ module StringUtils
 	
 	# Check if a string is empty.
 	# @parameter str [String] The string to check.
-	# @returns [Boolean] True if empty.
+	# @returns [bool] True if empty.
 	def empty?(str)
 		str.empty?
 	end

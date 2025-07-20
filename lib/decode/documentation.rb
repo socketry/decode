@@ -7,6 +7,7 @@ require_relative "comment/node"
 
 require_relative "comment/tags"
 require_relative "comment/attribute"
+require_relative "comment/constant"
 require_relative "comment/parameter"
 require_relative "comment/option"
 require_relative "comment/pragma"
@@ -21,20 +22,24 @@ module Decode
 		# Initialize the documentation with an array of comments, within a specific language.
 		#
 		# @parameter comments [Array(String)] An array of comment lines.
-		# @parameter language [Language] The language in which the comments were extracted.
-		def initialize(comments, language = nil)
+		# @parameter language [Language::Generic?] The language in which the comments were extracted.
+		def initialize(comments, language)
+			super(nil)
+			
 			@comments = comments
 			@language = language
 			
-			language.tags.parse(@comments.dup) do |node|
-				self.add(node)
+			if language
+				language.tags.parse(@comments.dup) do |node|
+					self.add(node)
+				end
 			end
 		end
 		
 		# @attribute [Array(String)] The underlying comments from which the documentation is extracted.
 		attr :comments
 		
-		# @attribute [Language::Generic] The language in which the documentation was extracted from.
+		# @attribute [Language::Generic?] The language in which the documentation was extracted from.
 		attr :language
 	end
 end

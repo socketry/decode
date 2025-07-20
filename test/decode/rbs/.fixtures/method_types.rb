@@ -15,7 +15,7 @@ class Calculator
 	
 	# Check if a number is positive.
 	# @parameter num [Integer] The number to check.
-	# @returns [Boolean] True if positive.
+	# @returns [bool] True if positive.
 	def positive?(num)
 		num > 0
 	end

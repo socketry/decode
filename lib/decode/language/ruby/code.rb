@@ -16,9 +16,9 @@ module Decode
 				# Initialize a new code block.
 				# @parameter text [String] The code text.
 				# @parameter index [Index] The index to use.
-				# @parameter relative_to [Definition] The definition this code is relative to.
-				# @parameter language [Language] The language of the code.
-				def initialize(text, index, relative_to: nil, language: relative_to&.language)
+				# @parameter relative_to [Definition?] The definition this code is relative to.
+				# @parameter language [Language::Generic] The language of the code.
+				def initialize(text, index, relative_to: nil, language:)
 					@text = text
 					@root = ::Prism.parse(text)
 					@index = index
@@ -26,12 +26,24 @@ module Decode
 					@language = language
 				end
 				
+				# @attribute [String] The code text.
 				attr :text
 				
+				# @attribute [untyped] The parsed syntax tree.
+				attr :root
+				
+				# @attribute [Index] The index to use for lookups.
+				attr :index
+				
+				# @attribute [Definition?] The definition this code is relative to.
+				attr :relative_to
+				
+				# @attribute [Language::Generic] The language of the code.
 				attr :language
 				
 				# Extract definitions from the code.
 				# @parameter into [Array] The array to extract definitions into.
+				# @returns [Array] The array with extracted definitions.
 				def extract(into = [])
 					if @index
 						traverse(@root.value, into)
@@ -42,6 +54,10 @@ module Decode
 				
 				private
 				
+				# Traverse the syntax tree and extract definitions.
+				# @parameter node [untyped] The syntax tree node to traverse.
+				# @parameter into [Array] The array to extract definitions into.
+				# @returns [self]
 				def traverse(node, into)
 					case node&.type
 					when :program_node
@@ -75,6 +91,8 @@ module Decode
 							traverse(child, into)
 						end
 					end
+					
+					return self
 				end
 			end
 		end

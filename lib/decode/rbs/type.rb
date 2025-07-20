@@ -11,8 +11,8 @@ module Decode
 		module Type
 			# Check if an RBS type represents a nullable/optional type
 			# This method recursively traverses the type tree to find nil anywhere
-			# @parameter rbs_type [::RBS::Types::t] The RBS type to check for nullability.
-			# @returns [Boolean] True if the type can be nil, false otherwise.
+			# @parameter rbs_type [untyped] The RBS type to check for nullability.
+			# @returns [bool] True if the type can be nil, false otherwise.
 			def self.nullable?(rbs_type)
 				case rbs_type
 				when ::RBS::Types::Optional
@@ -34,16 +34,16 @@ module Decode
 			
 			# Parse a type string and convert it to RBS type
 			# @parameter type_string [String] The type string to parse.
-			# @returns [::RBS::Types::t] The parsed RBS type object.
+			# @returns [untyped] The parsed RBS type object.
 			def self.parse(type_string)
 				# This is for backwards compatibility with the old syntax, eventually we will emit warnings for these:
 				type_string = type_string.tr("()", "[]")
-				type_string.gsub!("| Nil", "| nil")
+				type_string.gsub!(/\s*\| Nil/, "?")
 				type_string.gsub!("Boolean", "bool")
 				
 				return ::RBS::Parser.parse_type(type_string)
 			rescue => error
-				Console.warn(self, "Failed to parse type string: #{type_string}", error)
+				warn("Failed to parse type string: #{type_string}") if $DEBUG
 				return ::RBS::Parser.parse_type("untyped")
 			end
 		end

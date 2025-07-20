@@ -13,6 +13,6 @@ end
 # @parameter root [String] The root path to index.
 def generate(root)
 	index = Decode::Index.for(root)
-	generator = Decode::RBS::Generator.new
+	generator = Decode::RBS::Generator.new(include_private: true)
 	generator.generate(index)
 end

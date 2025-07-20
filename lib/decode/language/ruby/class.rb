@@ -58,13 +58,13 @@ module Decode
 				end
 				
 				# A singleton class is a container for other definitions.
-				# @returns [Boolean]
+				# @returns [bool]
 				def container?
 					true
 				end
 				
 				# Typically, a singleton class does not contain other definitions.
-				# @returns [Boolean]
+				# @returns [bool]
 				def nested?
 					false
 				end

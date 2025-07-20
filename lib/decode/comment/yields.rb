@@ -13,13 +13,16 @@ module Decode
 		#
 		# Should contain nested parameters.
 		class Yields < Tag
+			# @constant [Regexp] Pattern for matching yields declarations.
 			PATTERN = /\A(?<block>{.*?})(\s+(?<details>.*?))?\Z/
 			
 			# Build a yields tag from a directive and match.
 			# @parameter directive [String] The directive name.
 			# @parameter match [MatchData] The regex match data.
 			def self.build(directive, match)
-				node = self.new(directive, match[:block])
+				block = match[:block] or raise "Missing block in yields match!"
+				
+				node = self.new(directive, block)
 				
 				if details = match[:details]
 					node.add(Text.new(details))
@@ -34,6 +37,7 @@ module Decode
 			def initialize(directive, block)
 				super(directive)
 				
+				# @type ivar @block: String?
 				@block = block
 			end
 			

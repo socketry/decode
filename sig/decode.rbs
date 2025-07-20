@@ -1,10 +1,18 @@
 module Decode
+  VERSION: String
+
   # Represents comment parsing and processing functionality.
   module Comment
     # Describes an attribute type.
     #
     # - `@attribute [Integer] The person's age.`
     class Attribute < Tag
+      PATTERN: Regexp
+
+      attr_reader type(@type): String
+
+      @type: String
+
       # Build an attribute from a directive and match.
       public def self.build: (String directive, MatchData match) -> untyped
 
@@ -12,34 +20,58 @@ module Decode
       public def initialize: (String directive, String type) -> void
     end
 
+    # Represents a constant type declaration.
+    #
+    # - `@constant [Regexp] Pattern for matching parameters.`
+    class Constant < Tag
+      PATTERN: Regexp
+
+      attr_reader type(@type): String
+
+      @type: String
+
+      # Build a constant from a directive and regex match.
+      public def self.build: (String directive, MatchData match) -> Constant
+
+      # Initialize a new constant.
+      public def initialize: (String directive, String type) -> void
+    end
+
     # Represents a node in a comment tree structure.
     class Node
+      attr_reader children(@children): Array[Node | Text]?
+
+      @children: Array[Node | Text]?
+
       # Initialize the node.
-      public def initialize: (Array[Node] | nil children) -> void
+      public def initialize: (Array[Node | Text]? children) -> void
 
       # Whether this node has any children nodes.
       # Ignores {Text} instances.
       public def children?: () -> bool
 
       # Add a child node to this node.
-      public def add: (Node child) -> self
+      public def add: (Node | Text child) -> self
 
       # Enumerate all non-text children nodes.
-      public def each: () -> untyped
+      public def each: () { (Node node) -> void } -> (Enumerator[Node] | self)
 
       # Filter children nodes by class type.
-      public def filter: (Class klass) -> untyped
+      public def filter: (Class klass) { (Object node) -> void } -> (Enumerator[Node] | self)
 
       # Any lines of text associated with this node.
-      public def text: () -> (Array[String] | nil)
+      public def text: () -> Array[String]?
 
       # Traverse the tags from this node using {each}. Invoke `descend.call(child)` to recursively traverse the specified child.
       public def traverse: () { (Node node, Proc descend) -> void } -> untyped
+
+      # Extract text lines from Text children of this node.
+      def extract_text: () -> Array[String]?
     end
 
     # Describes a method option (keyword argument).
     #
-    # - `@option :cached [Boolean] Whether to cache the value.`
+    # - `@option :cached [bool] Whether to cache the value.`
     class Option < Parameter
     end
 
@@ -47,6 +79,16 @@ module Decode
     #
     # - `@parameter age [Float] The users age.`
     class Parameter < Tag
+      PATTERN: Regexp
+
+      attr_reader name(@name): String
+
+      attr_reader type(@type): String
+
+      @name: String
+
+      @type: String
+
       # Build a parameter from a directive and regex match.
       public def self.build: (String directive, MatchData match) -> Parameter
 
@@ -62,7 +104,7 @@ module Decode
     # - `@asynchronous This method may yield.`
     class Pragma < Tag
       # Parse a pragma directive from text.
-      public def self.parse: (String directive, String text, Array[String] lines, Array[Tag] tags, Integer level) -> untyped
+      public def self.parse: (String directive, String text, Array[String] lines, Array[Tag] tags, ?Integer level) -> untyped
 
       # Build a pragma from a directive and text.
       public def self.build: (String directive, String text) -> untyped
@@ -83,26 +125,30 @@ module Decode
     # - `@rbs generic T` - Declares a generic type parameter for a class
     # - `@rbs [T] () { () -> T } -> Task[T]` - Complete method type signature
     class RBS < Tag
+      attr_reader text(@text): String
+
+      @text: String
+
       # Parse an RBS pragma from text.
-      public def self.parse: (String directive, String text, Array[String] lines, Array[Tag] tags, Integer level) -> untyped
+      public def self.parse: (String directive, String text, Array[String] lines, Array[Tag] tags, ?Integer level) -> untyped
 
       # Build an RBS pragma from a directive and text.
       public def self.build: (String directive, String text) -> untyped
 
       # Initialize a new RBS pragma.
-      public def initialize: (String directive, String text) -> void
+      public def initialize: (String directive, String? text) -> void
 
       # Check if this is a generic type declaration.
       public def generic?: () -> bool
 
       # Extract the generic type parameter name.
-      public def generic_parameter: () -> (String | nil)
+      public def generic_parameter: () -> String?
 
       # Check if this is a method type signature.
       public def method_signature?: () -> bool
 
       # Get the method type signature text.
-      public def method_signature: () -> (String | nil)
+      public def method_signature: () -> String?
     end
 
     # Represents a return value.
@@ -112,15 +158,26 @@ module Decode
     end
 
     # Represents a documentation tag parsed from a comment directive.
+    # Subclasses should define a PATTERN constant for matching their specific syntax.
     class Tag < Node
+      PATTERN: Regexp
+
+      attr_reader directive(@directive): String
+
+      @directive: String
+
+      # Abstract method: Build a tag from directive and match data.
+      # Subclasses must implement this method.
+      public def self.build: (String directive, MatchData match) -> Tag
+
       # Build a pattern for bracketed content, supporting nested brackets.
-      public def self.bracketed_content: (String name) -> String
+      public def self.bracketed_content: (Symbol name) -> String
 
       # Match text against the tag pattern.
       public def self.match: (String text) -> untyped
 
       # Parse a tag from a directive and text.
-      public def self.parse: (String directive, String text, Array[String] lines, Tags tags, Integer level) -> untyped
+      public def self.parse: (String directive, String text, Array[String] lines, Tags tags, ?Integer level) -> untyped
 
       # Initialize a new tag.
       public def initialize: (String directive) -> void
@@ -128,24 +185,30 @@ module Decode
 
     # Represents a collection of documentation tags and their parsing logic.
     class Tags
+      PATTERN: Regexp
+
       # Build a tags parser with directive mappings.
-      public def self.build: (Proc block) -> untyped
+      public def self.build: () { (Hash[String, Class]) -> void } -> Tags
 
       # Initialize a new tags parser.
-      public def initialize: (Hash[String, Class] directives) -> void
+      public def initialize: (Hash[String, _Directive] directives) -> void
 
       # Check if a line has valid indentation for the given level.
       public def valid_indentation?: (String line, Integer level) -> bool
 
       # Parse documentation tags from lines.
-      public def parse: (Array[String] lines, Integer level, Proc block) -> untyped
+      public def parse: (Array[String] lines, ?Integer level) { (Node | Text) -> void } -> void
 
       # Ignore lines at the specified indentation level.
-      public def ignore: (Array[String] lines, Integer level) -> untyped
+      public def ignore: (Array[String] lines, ?Integer level) -> untyped
     end
 
     # A structured comment.
     class Text
+      attr_reader line(@line): String
+
+      @line: String
+
       # Initialize a new text node.
       public def initialize: (String line) -> void
 
@@ -165,6 +228,8 @@ module Decode
     #
     # Should contain nested parameters.
     class Yields < Tag
+      PATTERN: Regexp
+
       # Build a yields tag from a directive and match.
       public def self.build: (String directive, MatchData match) -> untyped
 
@@ -175,18 +240,40 @@ module Decode
 
   # A symbol with attached documentation.
   class Definition
+    attr_reader path(@path): Array[Symbol]
+
+    attr_reader parent(@parent): Definition?
+
+    attr_reader language(@language): Language::Generic
+
+    attr_reader source(@source): Source?
+
+    attr_reader comments(@comments): Array[String]?
+
+    attr_reader visibility(@visibility): Symbol
+
+    @path: Array[Symbol]
+
+    @parent: Definition?
+
+    @language: Language::Generic
+
+    @source: Source?
+
+    @comments: Array[String]?
+
+    @visibility: Symbol
+
     # Initialize the symbol.
-    public def initialize: (Symbol | Array[Symbol] path, Symbol parent, Language language, Array[String] comments, Source source) -> void
+    public def initialize: (Symbol | Array[Symbol] path, ?parent: Definition?, ?language: Language::Generic?, ?comments: Array[String]?, ?visibility: Symbol, ?source: Source?) -> void
 
     # Generate a debug representation of the definition.
     public def inspect: () -> untyped
 
-    # The symbol name.
-    # e.g. `:Decode`.
     public def name: () -> untyped
 
     # The full path to the definition.
-    public def full_path: () -> untyped
+    public def full_path: () -> Array[Symbol]
 
     # Whether the definition is considered part of the public interface.
     # This is used to determine whether the definition should be documented for coverage purposes.
@@ -198,7 +285,6 @@ module Decode
     # The qualified name is an absolute name which includes any and all namespacing.
     public def qualified_name: () -> String
 
-    # The name relative to the parent.
     public def nested_name: () -> String
 
     # Does the definition name match the specified prefix?
@@ -209,21 +295,21 @@ module Decode
 
     # A short form of the definition.
     # e.g. `def short_form`.
-    public def short_form: () -> (String | nil)
+    public def short_form: () -> String?
 
     # A long form of the definition.
     # e.g. `def initialize(kind, name, comments, **options)`.
-    public def long_form: () -> (String | nil)
+    public def long_form: () -> String?
 
     # A long form which uses the qualified name if possible.
     # Defaults to {long_form}.
-    public def qualified_form: () -> (String | nil)
+    public def qualified_form: () -> String?
 
     # Whether the definition spans multiple lines.
     public def multiline?: () -> bool
 
     # The full text of the definition.
-    public def text: () -> (String | nil)
+    public def text: () -> String?
 
     # Whether this definition can contain nested definitions.
     public def container?: () -> bool
@@ -232,25 +318,49 @@ module Decode
     public def nested?: () -> bool
 
     # Structured access to the definitions comments.
-    public def documentation: () -> (Documentation | nil)
+    public def documentation: () -> Documentation?
 
     # The location of the definition.
-    public def location: () -> (Location | nil)
+    public def location: () -> Location?
   end
 
   # Structured access to a set of comment lines.
   class Documentation < Comment::Node
+    attr_reader comments(@comments): Array[String]
+
+    attr_reader language(@language): Language::Generic?
+
+    @comments: Array[String]
+
+    @language: Language::Generic?
+
     # Initialize the documentation with an array of comments, within a specific language.
-    public def initialize: (Array[String] comments, Language language) -> void
+    public def initialize: (Array[String] comments, Language::Generic? language) -> void
   end
 
   # Represents a list of definitions organised for quick lookup and lexical enumeration.
   class Index
+    attr_reader languages(@languages): Languages
+
+    attr_reader sources(@sources): Hash[String, Source]
+
+    attr_reader definitions(@definitions): Hash[String, Definition]
+
+    attr_reader trie(@trie): Trie[Definition]
+
+    @languages: Languages
+
+    @sources: Hash[String, Source]
+
+    @definitions: Hash[String, Definition]
+
+    @trie: Trie[Definition]
+
     # Create and populate an index from the given paths.
-    public def self.for: (Array[String] paths, Languages languages) -> Index
+    public def self.for: (*String, ?languages: Languages) -> Index
 
     # Initialize an empty index.
-    public def initialize: (Languages languages) -> void
+    public def initialize: (?Languages languages) -> void
 
     # Generate a string representation of this index.
     public def inspect: () -> String
@@ -260,15 +370,27 @@ module Decode
     public def update: (Array[String] paths) -> untyped
 
     # Lookup the specified reference and return matching definitions.
-    public def lookup: (Language::Reference reference, Definition relative_to) -> (Definition | nil)
+    public def lookup: (Language::Reference reference, ?relative_to: Definition?) -> Definition?
   end
 
   # Language specific parsers and definitions.
   module Language
     # Represents a generic language implementation that can be extended for specific languages.
     class Generic
+      attr_reader name(@name): String
+
+      attr_reader extensions(@extensions): Array[String]
+
+      attr_reader tags(@tags): Comment::Tags
+
+      @name: String
+
+      @extensions: Array[String]
+
+      @tags: Comment::Tags
+
       # Initialize a new generic language.
-      public def initialize: (String name, Array[String] extensions, Comment::Tags tags) -> void
+      public def initialize: (String, ?extensions: Array[String], ?tags: Comment::Tags) -> void
 
       # Get all names for this language.
       public def names: () -> Array[String]
@@ -277,7 +399,7 @@ module Decode
       public def reference_for: (String identifier) -> Reference
 
       # Get the parser for this language.
-      public def parser: () -> (Parser | nil)
+      public def parser: () -> untyped
 
       # Parse the input yielding definitions.
       public def definitions_for: (Source source) { (Definition definition) -> void } -> Enumerator[Segment]
@@ -285,12 +407,23 @@ module Decode
       # Parse the input yielding segments.
       # Segments are constructed from a block of top level comments followed by a block of code.
       public def segments_for: (Source source) { (Segment segment) -> void } -> Enumerator[Segment]
+
+      # Generate a code representation with syntax highlighting and link resolution.
+      public def code_for: (String text, Index index, ?relative_to: Definition) -> Code
     end
 
     # An reference which can be resolved to zero or more definitions.
     class Reference
+      attr_reader identifier(@identifier): String
+
+      attr_reader language(@language): Language::Generic
+
+      @identifier: String
+
+      @language: Language::Generic
+
       # Initialize the reference.
-      public def initialize: (String identifier, Language::Generic language, Array[String] | nil lexical_path) -> void
+      public def initialize: (String identifier, Language::Generic language, ?Array[String]? lexical_path) -> void
 
       # Generate a string representation of the reference.
       public def to_s: () -> untyped
@@ -314,10 +447,10 @@ module Decode
       public def priority: (String definition, String prefix) -> untyped
 
       # Find the best matching definition from a list.
-      public def best: (Array[String] definitions) -> untyped
+      public def best: (Array[Definition] definitions) -> Definition?
 
       # The lexical path of the reference.
-      public def path: () -> Array[String]
+      public def path: () -> Array[Symbol]
     end
 
     # Represents an interface for extracting information from Ruby source code.
@@ -328,7 +461,7 @@ module Decode
       # Represents an alias statement, e.g., `alias new_name old_name` or `alias_method :new_name, :old_name`
       class Alias < Definition
         # Initialize a new alias definition.
-        public def initialize: (String new_name, String old_name, Hash options) -> void
+        public def initialize: (String new_name, String old_name, **Hash options) -> void
 
         # Generate a short form representation of the alias.
         public def short_form: () -> untyped
@@ -395,7 +528,7 @@ module Decode
       # A Ruby-specific class.
       class Class < Definition
         # Initialize a new class definition.
-        public def initialize: (Array arguments, String super_class, Hash options) -> void
+        public def initialize: (*Array arguments, ?super_class: String, **Hash options) -> void
 
         # A class is a container for other definitions.
         public def container?: () -> bool
@@ -427,15 +560,40 @@ module Decode
         # The short form of the class.
         # e.g. `class << self`.
         public def short_form: () -> untyped
+
+        private def absolute_path: () -> untyped
       end
 
       # A Ruby-specific block of code.
       class Code
+        attr_reader text(@text): String
+
+        attr_reader root(@root): untyped
+
+        attr_reader index(@index): Index
+
+        attr_reader relative_to(@relative_to): Definition?
+
+        attr_reader language(@language): Language::Generic
+
+        @text: String
+
+        @root: untyped
+
+        @index: Index
+
+        @relative_to: Definition?
+
+        @language: Language::Generic
+
         # Initialize a new code block.
-        public def initialize: (String text, Index index, Definition relative_to, Language language) -> void
+        public def initialize: (String, Index, language: Language::Generic, ?relative_to: Definition?) -> void
 
         # Extract definitions from the code.
-        public def extract: (Array into) -> untyped
+        public def extract: (?Array[untyped]) -> Array[untyped]
+
+        # Traverse the syntax tree and extract definitions.
+        private def traverse: (untyped, Array[untyped]) -> void
       end
 
       # A Ruby-specific constant.
@@ -454,11 +612,25 @@ module Decode
 
       # Represents a Ruby-specific definition extracted from source code.
       class Definition < Decode::Definition
+        attr_reader node(@node): Parser::AST::Node
+
+        attr_reader visibility(@visibility): Symbol
+
+        @node: Parser::AST::Node
+
+        @visibility: Symbol
+
         # Initialize the definition from the syntax tree node.
-        public def initialize: (Array arguments, Symbol visibility, Parser::AST::Node node, Hash options) -> void
+        public def initialize: (*Array arguments, ?visibility: Symbol, ?node: Parser::AST::Node, **Hash options) -> void
 
         # Check if this definition is public.
         public def public?: () -> bool
+
+        # Check if this definition is protected.
+        public def protected?: () -> bool
+
+        # Check if this definition is private.
+        public def private?: () -> bool
 
         # Check if this definition spans multiple lines.
         public def multiline?: () -> bool
@@ -467,7 +639,7 @@ module Decode
         public def text: () -> String
 
         # Get the location of this definition.
-        public def location: () -> (Location | nil)
+        public def location: () -> Location?
       end
 
       # A Ruby-specific function.
@@ -482,19 +654,19 @@ module Decode
       # Represents the Ruby language implementation for parsing and analysis.
       class Generic < Language::Generic
         # Get the parser for Ruby source code.
-        public def parser: () -> Parser
+        public def parser: () -> Language::Ruby::Parser
 
         # Generate a language-specific reference for Ruby.
         public def reference_for: (String identifier) -> Reference
 
         # Generate a code representation with syntax highlighting and link resolution.
-        public def code_for: (String text, Index index, Definition relative_to) -> Code
+        public def code_for: (String text, Index index, ?relative_to: Definition) -> Code
       end
 
       # A Ruby-specific method.
       class Method < Definition
         # Initialize a new method definition.
-        public def initialize: (Array arguments, String receiver, Hash options) -> void
+        public def initialize: (*Array arguments, ?receiver: String, **Hash options) -> void
 
         # Generate a nested name for the method.
         public def nested_name: () -> untyped
@@ -540,47 +712,111 @@ module Decode
 
       # The Ruby source code parser.
       class Parser
+        attr_reader language(@language): Language::Generic
+
+        attr_reader visibility(@visibility): Symbol
+
+        attr_reader definitions(@definitions): Hash
+
+        @language: Language::Generic
+
+        @visibility: Symbol
+
+        @definitions: Hash
+
         # Initialize a new Ruby parser.
-        public def initialize: (Language language) -> void
+        public def initialize: (Language::Generic language) -> void
+
+        # Parse the source code using Prism.
+        public def parse_source: (Source source) -> untyped
+
+        # Parse the given source object, can be a string or a Source instance.
+        private def parse_source: (String | Source source) -> untyped
 
         # Extract definitions from the given input file.
-        public def definitions_for: () -> untyped
+        public def definitions_for: (Source source) -> Enumerator[Definition]
 
         # Walk over the syntax tree and extract relevant definitions with their associated comments.
-        public def walk_definitions: () -> untyped
+        public def walk_definitions: (untyped node, ?Definition? parent, ?Source? source) -> untyped
 
         # Extract segments from the given input file.
-        public def segments_for: () -> untyped
+        public def segments_for: (Source source) -> Enumerator[Segment]
+
+        # Extract clean comment text from a node by removing leading # symbols and whitespace.
+        # Only returns comments that directly precede the node (i.e., are adjacent to it).
+        # Extract comments that directly precede a node.
+        private def comments_for: (untyped node) -> Array[String]
+
+        # Assign a definition to a parent scope.
+        private def assign_definition: (Definition? parent, Definition definition) -> untyped
+
+        # Look up a definition in the parent scope.
+        private def lookup_definition: (Definition? parent, Symbol name) -> Definition?
+
+        # Store a definition in the parent scope.
+        private def store_definition: (Definition? parent, Symbol name, Definition definition) -> untyped
+
+        private def with_visibility: (?untyped visibility) -> untyped
+
+        private def attribute_name_for: (untyped node) -> untyped
+
+        private def nested_path_for: (untyped node, ?untyped path) -> untyped
+
+        private def nested_name_for: (untyped node) -> untyped
+
+        private def symbol_name_for: (untyped node) -> untyped
+
+        private def receiver_for: (untyped node) -> untyped
+
+        private def singleton_name_for: (untyped node) -> untyped
+
+        private def kind_for: (untyped node, ?untyped comments) -> untyped
+
+        private def scope_for: (untyped comments, ?untyped parent) -> untyped
+
+        private def constant_names_for: (untyped child_nodes) -> untyped
+
+        private def walk_segments: (untyped node, untyped comments) -> untyped
       end
 
       # An Ruby-specific reference which can be resolved to zero or more definitions.
       class Reference < Language::Reference
         # Create a reference from a constant node.
-        public def self.from_const: (Prism::Node node, Language::Generic language) -> untyped
+        public def self.from_const: (untyped node, Language::Generic language) -> Reference
 
         # Append a constant node to the path.
-        public def self.append_const: (Prism::Node node, Array path) -> Array
+        public def self.append_const: (untyped, ?Array[untyped]) -> Array[untyped]
 
         # Split a Ruby identifier into prefix and name components.
-        public def split: (String text) -> untyped
+        public def split: (String text) -> Array
       end
 
       # A Ruby specific code segment.
       class Segment < Decode::Segment
         # Initialize a new Ruby segment.
-        public def initialize: (Array[String] comments, Language language, Prism::Node node, Hash options) -> void
+        public def initialize: (Array[String] comments, Generic language, Prism::Node node, **Hash options) -> void
 
         # Expand the segment to include another node.
         public def expand: (Prism::Node node) -> untyped
 
         # The source code trailing the comments.
-        public def code: () -> (String | nil)
+        public def code: () -> String?
       end
     end
   end
 
   # Represents a context for looking up languages based on file extension or name.
   class Languages
+    REFERENCE: Regexp
+
+    attr_reader named(@named): Hash[String, Language::Generic]
+
+    attr_reader extensions(@extensions): Hash[String, Language::Generic]
+
+    @named: Hash[String, Language::Generic]
+
+    @extensions: Hash[String, Language::Generic]
+
     # Create a new languages context with all supported languages.
     public def self.all: () -> Languages
 
@@ -594,20 +830,30 @@ module Decode
     public def add: (Language::Generic language) -> self
 
     # Fetch a language by name, creating a generic language if needed.
-    public def fetch: (String name) -> Language::Generic
+    public def fetch: (String name) -> Language::Generic?
 
     # Create a source object for the given file path.
-    public def source_for: (String path) -> (Source | nil)
+    public def source_for: (String path) -> Source?
 
     # Parse a language agnostic reference.
-    public def parse_reference: (String text, Language::Generic default_language) -> (Language::Reference | nil)
+    public def parse_reference: (String text, ?default_language: Language::Generic?) -> Language::Reference?
 
     # Create a reference for the given language and identifier.
-    public def reference_for: (String name, String identifier) -> Language::Reference
+    public def reference_for: (String name, String identifier) -> Language::Reference?
   end
 
   # Represents a location in a source file.
   class Location
+    attr_reader path(@path): String
+
+    attr_reader line(@line): Integer
+
+    @path: String
+
+    @line: Integer
+
+    public def initialize: (untyped path, untyped line) -> void
+
     # Generate a string representation of the location.
     public def to_s: () -> untyped
   end
@@ -620,20 +866,61 @@ module Decode
       public def initialize: (Decode::Definition definition) -> void
 
       # Extract generic type parameters from the class definition.
-      public def generics: () -> Array
+      public def generics: () -> Array[Symbol]
 
       # Convert the class definition to RBS AST
-      public def to_rbs_ast: () -> untyped
+      public def to_rbs_ast: (?untyped method_definitions, ?untyped constant_definitions, ?untyped attribute_definitions, ?untyped index) -> untyped
+
+      private def extract_generics: () -> untyped
+
+      # Build a constant RBS declaration
+      private def build_constant_rbs: (untyped constant_definition) -> untyped
+
+      # Convert a simple name to RBS TypeName (not qualified)
+      private def simple_name_to_rbs: (untyped name) -> untyped
+
+      # Build attribute RBS declarations and infer instance variable types
+      private def build_attributes_rbs: (Array attribute_definitions) -> Array
+
+      # Convert a qualified name to RBS TypeName
+      private def qualified_name_to_rbs: (untyped qualified_name) -> untyped
     end
 
     # Represents a generator for RBS type declarations.
     class Generator
+      attr_reader loader(@loader): ::RBS::EnvironmentLoader
+
+      attr_reader environment(@environment): ::RBS::Environment
+
+      attr_reader include_private(@include_private): bool
+
+      @loader: ::RBS::EnvironmentLoader
+
+      @environment: ::RBS::Environment
+
+      @include_private: bool
+
       # Initialize a new RBS generator.
       # Sets up the RBS environment for type resolution.
-      public def initialize: () -> void
+      public def initialize: (?include_private: bool) -> void
 
       # Generate RBS declarations for the given index.
-      public def generate: (Decode::Index index, IO output) -> untyped
+      public def generate: (Decode::Index index, ?output: IO) -> untyped
+
+      # Build nested RBS declarations preserving the parent hierarchy.
+      private def build_nested_declaration: (Definition definition, Hash declarations, Index index) -> untyped?
+
+      # Convert a definition to RBS AST.
+      private def definition_to_rbs: (Definition definition, Index index) -> untyped
+
+      # Get methods for a given definition efficiently using trie lookup.
+      private def get_methods_for_definition: (Definition definition, Index index) -> Array
+
+      # Get constants for a given definition efficiently using trie lookup.
+      private def get_constants_for_definition: (Definition definition, Index index) -> Array
+
+      # Get attributes for a given definition efficiently using trie lookup.
+      private def get_attributes_for_definition: (Definition definition, Index index) -> Array
     end
 
     # Represents a Ruby method definition wrapper for RBS generation.
@@ -654,7 +941,39 @@ module Decode
       public def parameters: () -> Array
 
       # Convert the method definition to RBS AST
-      public def to_rbs_ast: () -> untyped
+      public def to_rbs_ast: (?untyped index) -> untyped
+
+      # Build a complete RBS function type from AST information
+      public def build_function_type_from_ast: (Definition definition, Index index) -> RBS::Types::Function
+
+      private def extract_signatures: () -> untyped
+
+      # Extract return type from method documentation
+      private def extract_return_type: (untyped definition, untyped index) -> untyped
+
+      # Extract parameter types from method documentation
+      private def extract_parameters: (untyped definition, untyped index) -> untyped
+
+      # Extract parameter information from the Prism AST node
+      private def extract_parameters_from_ast: (Definition definition) -> Array
+
+      # Extract keyword arguments from @option tags and AST
+      private def extract_keyword_arguments: (untyped definition, untyped index) -> untyped
+
+      # Extract keyword arguments from the Prism AST node
+      private def extract_keyword_arguments_from_ast: (Definition definition) -> Hash
+
+      # Extract documented parameter types into a hash for lookup
+      private def extract_documented_parameter_types: (Definition definition) -> Hash
+
+      # Make a type optional if it's not already nullable
+      private def make_type_optional_if_needed: (RBS::Types::t type) -> RBS::Types::t
+
+      # Extract block type from method documentation
+      private def extract_block_type: (untyped definition, untyped index) -> untyped
+
+      # Infer return type based on method patterns and heuristics
+      private def infer_return_type: (untyped definition) -> untyped
     end
 
     # Represents a Ruby module definition wrapper for RBS generation.
@@ -663,16 +982,25 @@ module Decode
       public def initialize: (Decode::Definition definition) -> void
 
       # Convert the module definition to RBS AST
-      public def to_rbs_ast: () -> untyped
+      public def to_rbs_ast: (?Array[Method] method_definitions, ?Array[Constant] constant_definitions, ?Array[Attribute] attribute_definitions, ?Index? index) -> RBS::AST::Declarations::Module
+
+      # Build a constant RBS declaration
+      private def build_constant_rbs: (untyped constant_definition) -> untyped
+
+      # Convert a simple name to RBS TypeName (not qualified)
+      private def simple_name_to_rbs: (untyped name) -> untyped
+
+      # Build attribute RBS declarations and infer instance variable types
+      private def build_attributes_rbs: (Array attribute_definitions) -> Array
     end
 
     module Type
       # Check if an RBS type represents a nullable/optional type
       # This method recursively traverses the type tree to find nil anywhere
-      public def self.nullable?: (::RBS::Types::t rbs_type) -> bool
+      public def self.nullable?: (untyped rbs_type) -> bool
 
       # Parse a type string and convert it to RBS type
-      public def self.parse: (String type_string) -> ::RBS::Types::t
+      public def self.parse: (String type_string) -> untyped
     end
 
     # Base wrapper class for RBS generation from definitions.
@@ -684,7 +1012,13 @@ module Decode
       public def tags: () -> Array
 
       # Extract comment from the definition's documentation.
-      public def comment: () -> (RBS::AST::Comment | nil)
+      public def comment: () -> RBS::AST::Comment?
+
+      # Extract RBS tags from the definition's documentation.
+      private def extract_tags: () -> Array
+
+      # Extract comment from definition documentation.
+      private def extract_comment: (?Definition definition) -> RBS::AST::Comment?
     end
   end
 
@@ -703,23 +1037,36 @@ module Decode
   # segment = source.segments.first
   # ~~~
   class Segment
+    attr_reader comments(@comments): Array[String]
+
+    attr_reader language(@language): Language::Generic
+
+    @comments: Array[String]
+
+    @language: Language::Generic
+
     # Initialize a new segment.
     public def initialize: (Array[String] comments, Language::Generic language) -> void
 
     # An interface for accsssing the documentation of the definition.
-    public def documentation: () -> (Documentation | nil)
+    public def documentation: () -> Documentation?
 
     # The source code trailing the comments.
-    public def code: () -> (String | nil)
+    public def code: () -> String?
   end
 
   # Represents a source file in a specific language.
   class Source
+    attr_reader path(@path): StringPath
+
+    attr_reader language(@language): Language::Generic
+
+    @path: StringPath
+
+    @language: Language::Generic
+
     # Initialize a new source file.
     public def initialize: (String path, Language::Generic language) -> void
-
-    # The relative path of the source, if it is known.
-    public def relative_path: () -> String
 
     # Read the source file into an internal buffer/cache.
     public def read: () -> String
@@ -731,7 +1078,7 @@ module Decode
     public def segments: () { (Segment segment) -> void } -> Enumerator[Segment]
 
     # Generate code representation with optional index for link resolution.
-    public def code: (Index index, Definition relative_to) -> String
+    public def code: (?Index? index, ?relative_to: Definition?) -> String
   end
 
   # Provides syntax rewriting and linking functionality.
@@ -768,6 +1115,14 @@ module Decode
 
     # Provides text rewriting functionality with match-based substitutions.
     class Rewriter
+      attr_reader text(@text): String
+
+      attr_reader matches(@matches): Array[Match]
+
+      @text: String
+
+      @matches: Array[Match]
+
       # Initialize a new rewriter.
       public def initialize: (String text) -> void
 
@@ -775,10 +1130,10 @@ module Decode
       public def <<: (Match match) -> self
 
       # Returns a chunk of raw text with no formatting.
-      public def text_for: () -> untyped
+      public def text_for: (untyped range) -> untyped
 
       # Apply all matches to generate the rewritten output.
-      public def apply: (Array output) -> untyped
+      public def apply: (?Array output) -> untyped
 
       # Generate a link to a definition.
       public def link_to: (Definition definition, String text) -> untyped
@@ -786,37 +1141,49 @@ module Decode
   end
 
   # Represents a prefix-trie data structure for fast lexical lookups.
-  class Trie
+  class Trie[T]
+    attr_reader root(@root): Node
+
+    @root: Node
+
     # Initialize an empty trie.
     public def initialize: () -> void
 
     # Insert the specified value at the given path into the trie.
-    public def insert: (Array[String] path, Object value) -> untyped
+    public def insert: (Array[Symbol] path, T value) -> untyped
 
     # Lookup the values at the specified path.
-    public def lookup: (Array[String] path) -> (Node | nil)
+    public def lookup: (Array[Symbol] path) -> Node?
 
     # Enumerate all lexical scopes under the specified path.
-    public def each: (Array[String] path) { (Array[String] path, Array[Object] | nil values) -> void } -> untyped
+    public def each: (?Array[Symbol]) { (Array[Symbol], Array[T] | nil) -> void } -> void
 
     # Traverse the trie starting from the specified path.
     # See {Node#traverse} for details.
-    public def traverse: (Array[String] path) { () -> void } -> untyped
+    public def traverse: (?Array[Symbol]) { (Array[Symbol], Node, Proc) -> void } -> void
 
     # Represents a single node in the trie.
     class Node
-      # Initialize a new trie node.
+      attr_reader values(@values): Array[T]?
+
+      attr_reader children(@children): Hash[Symbol, Node]
+
+      @values: Array[T]?
+
+      @children: Hash[Symbol, Node]
+
+      # Initialize an empty node.
       public def initialize: () -> void
 
       # Generate a string representation of this node.
       public def inspect: () -> String
 
       # Look up a lexical path starting at this node.
-      public def lookup: (Array[String] path, Integer index) -> (Node | nil)
+      public def lookup: (Array[Symbol] path, ?Integer index) -> Node?
 
       # Traverse the trie from this node.
       # Invoke `descend.call` to traverse the children of the current node.
-      public def traverse: (Array[String] path) { (Array[String] path, Node node, Proc descend) -> void } -> untyped
+      public def traverse: (?Array[Symbol]) { (Array[Symbol], Node, Proc) -> void } -> void
     end
   end
 end

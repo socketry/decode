@@ -95,7 +95,7 @@ describe Decode::RBS::Method do
 				"@parameter name [String] The name parameter", 
 				"@option :format [Symbol] Required output format",
 				"@option :cached [Boolean?] Optional caching",
-				"@option :timeout [Integer | nil] Optional timeout",
+				"@option :timeout [Integer?] Optional timeout",
 				"@returns [String]",
 				"@returns [nil]"
 			]}
@@ -183,7 +183,7 @@ describe Decode::RBS::Method do
 			end
 			
 			with "method with @parameter and @option tags" do
-				let(:comments) {["@parameter name [String] The name parameter", "@option :cached [Boolean] Whether to cache"]}
+				let(:comments) {["@parameter name [String] The name parameter", "@option :cached [bool] Whether to cache"]}
 				
 				it "only extracts @parameter tags, not @option tags" do
 					parameters = rbs_method.parameters
@@ -213,7 +213,7 @@ describe Decode::RBS::Method do
 			end
 			
 			with "method with optional @option tags" do
-				let(:comments) {["@option :cached [Boolean?] Whether to cache the result", "@option :timeout [Integer | nil] Request timeout"]}
+				let(:comments) {["@option :cached [Boolean?] Whether to cache the result", "@option :timeout [Integer?] Request timeout"]}
 				
 				it "extracts optional keyword arguments from nullable @option tags" do
 					keywords = rbs_method.keyword_arguments

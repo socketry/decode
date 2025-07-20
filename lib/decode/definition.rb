@@ -10,10 +10,11 @@ module Decode
 	class Definition
 		# Initialize the symbol.
 		# @parameter path [Symbol | Array(Symbol)] The path of the definition relatve to the parent.
-		# @parameter parent [Symbol] The parent lexical scope.
-		# @parameter language [Language] The language in which the symbol is defined in.
-		# @parameter comments [Array(String)] The comments associated with the definition.
-		# @parameter source [Source] The source file containing this definition.
+		# @parameter parent [Definition?] The parent lexical scope.
+		# @parameter language [Language::Generic?] The language in which the symbol is defined in.
+		# @parameter comments [Array(String)?] The comments associated with the definition.
+		# @parameter visibility [Symbol] The visibility of the definition.
+		# @parameter source [Source?] The source file containing this definition.
 		def initialize(path, parent: nil, language: parent&.language, comments: nil, visibility: :public, source: parent&.source)
 			@path = Array(path).map(&:to_sym)
 			
@@ -23,6 +24,7 @@ module Decode
 			
 			@comments = comments
 			@visibility = visibility
+			@documentation = nil
 			
 			@full_path = nil
 			@qualified_name = nil
@@ -37,9 +39,7 @@ module Decode
 		# Generate a string representation of the definition.
 		alias to_s inspect
 		
-		# The symbol name.
-		# e.g. `:Decode`.
-		# @attribute [Symbol]
+		# @attribute [Symbol] The symbol name e.g. `:Decode`.
 		def name
 			@path.last
 		end
@@ -48,10 +48,11 @@ module Decode
 		attr :path
 		
 		# The full path to the definition.
+		# @returns [Array(Symbol)] The complete path from root to this definition.
 		def full_path
 			@full_path ||= begin
-				if @parent
-					@parent.full_path + @path
+				if parent = @parent
+					parent.full_path + @path
 				else
 					@path
 				end
@@ -62,52 +63,51 @@ module Decode
 		# @returns [Array(Symbol)] The complete path from root to this definition.
 		alias lexical_path full_path
 		
-		# @attribute [Definition | Nil] The parent definition, defining lexical scope.
+		# @attribute [Definition?] The parent definition, defining lexical scope.
 		attr :parent
 		
 		# @attribute [Language::Generic] The language the symbol is defined within.
 		attr :language
 		
-		# @attribute [Source | Nil] The source file containing this definition.
+		# @attribute [Source?] The source file containing this definition.
 		attr :source
 		
-		# @attribute [Array(String)] The comment lines which directly preceeded the definition.
+		# @attribute [Array(String)?] The comment lines which directly preceeded the definition.
 		attr :comments
 		
 		# Whether the definition is considered part of the public interface.
 		# This is used to determine whether the definition should be documented for coverage purposes.
-		# @returns [Boolean] True if the definition is public.
+		# @returns [bool] True if the definition is public.
 		def public?
 			true
 		end
 		
 		# Whether the definition has documentation.
-		# @returns [Boolean] True if the definition has non-empty comments.
+		# @returns [bool] True if the definition has non-empty comments.
 		def documented?
-			@comments&.any?
+			@comments&.any? || false
 		end
 		
 		# The qualified name is an absolute name which includes any and all namespacing.
 		# @returns [String]
 		def qualified_name
 			@qualified_name ||= begin
-				if @parent
-					[@parent.qualified_name, self.nested_name].join("::")
+				if parent = @parent
+					[parent.qualified_name, self.nested_name].join("::")
 				else
 					self.nested_name
 				end
 			end
 		end
 		
-		# The name relative to the parent.
-		# @returns [String]
+		# @returns [String] The name relative to the parent.
 		def nested_name
 			@nested_name ||= "#{@path.join("::")}"
 		end
 		
 		# Does the definition name match the specified prefix?
 		# @parameter prefix [String] The prefix to match against.
-		# @returns [Boolean]
+		# @returns [bool]
 		def start_with?(prefix)
 			self.nested_name.start_with?(prefix)
 		end
@@ -121,14 +121,14 @@ module Decode
 		# A short form of the definition.
 		# e.g. `def short_form`.
 		#
-		# @returns [String | Nil]
+		# @returns [String?]
 		def short_form
 		end
 		
 		# A long form of the definition.
 		# e.g. `def initialize(kind, name, comments, **options)`.
 		#
-		# @returns [String | Nil]
+		# @returns [String?]
 		def long_form
 			self.short_form
 		end
@@ -136,50 +136,50 @@ module Decode
 		# A long form which uses the qualified name if possible.
 		# Defaults to {long_form}.
 		#
-		# @returns [String | Nil]
+		# @returns [String?]
 		def qualified_form
 			self.long_form
 		end
 		
 		# Whether the definition spans multiple lines.
 		#
-		# @returns [Boolean]
+		# @returns [bool]
 		def multiline?
 			false
 		end
 		
 		# The full text of the definition.
 		#
-		# @returns [String | Nil]
+		# @returns [String?]
 		def text
 		end
 		
 		# Whether this definition can contain nested definitions.
 		#
-		# @returns [Boolean]
+		# @returns [bool]
 		def container?
 			false
 		end
 		
 		# Whether this represents a single entity to be documented (along with it's contents).
 		#
-		# @returns [Boolean]
+		# @returns [bool]
 		def nested?
 			container?
 		end
 		
 		# Structured access to the definitions comments.
 		#
-		# @returns [Documentation | Nil] A {Documentation} instance if this definition has comments.
+		# @returns [Documentation?] A {Documentation} instance if this definition has comments.
 		def documentation
-			if @comments&.any?
-				@documentation ||= Documentation.new(@comments, @language)
+			if comments = @comments and comments.any?
+				@documentation ||= Documentation.new(comments, @language)
 			end
 		end
 		
 		# The location of the definition.
 		#
-		# @returns [Location | Nil] A {Location} instance if this definition has a location.
+		# @returns [Location?] A {Location} instance if this definition has a location.
 		def location
 			nil
 		end

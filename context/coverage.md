@@ -60,7 +60,7 @@ end
 
 # Process user data and return formatted results.
 # @parameter name [String] The user's name.
-# @returns [Boolean] Success status.
+# @returns [bool] Success status.
 def process(name)
   # Validation logic here:
   return false if name.empty?

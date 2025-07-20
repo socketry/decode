@@ -13,13 +13,16 @@ module Decode
 		# - `@attribute [Integer] The person's age.`
 		#
 		class Attribute < Tag
+			# @constant [Regexp] Pattern for matching attribute declarations.
 			PATTERN = /\A\[#{Tag.bracketed_content(:type)}\](\s+(?<details>.*?))?\Z/
 			
 			# Build an attribute from a directive and match.
 			# @parameter directive [String] The original directive text.
 			# @parameter match [MatchData] The regex match data.
 			def self.build(directive, match)
-				node = self.new(directive, match[:type])
+				type = match[:type] or raise "Missing type in attribute match!"
+				
+				node = self.new(directive, type)
 				
 				if details = match[:details]
 					node.add(Text.new(details))

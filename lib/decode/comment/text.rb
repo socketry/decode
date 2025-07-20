@@ -15,6 +15,7 @@ module Decode
 				@line = line
 			end
 			
+			# @attribute [String] The text content.
 			attr :line
 			
 			# Traverse the text node.

@@ -20,6 +20,7 @@ module Decode
 		def initialize(comments, language)
 			@comments = comments
 			@language = language
+			@documentation = nil
 		end
 		
 		# @attribute [Array(String)] The preceeding comments.
@@ -29,7 +30,7 @@ module Decode
 		attr :language
 		
 		# An interface for accsssing the documentation of the definition.
-		# @returns [Documentation | Nil] A {Documentation} instance if this definition has comments.
+		# @returns [Documentation?] A {Documentation} instance if this definition has comments.
 		def documentation
 			if @comments&.any?
 				@documentation ||= Documentation.new(@comments, @language)
@@ -37,7 +38,7 @@ module Decode
 		end
 		
 		# The source code trailing the comments.
-		# @returns [String | Nil]
+		# @returns [String?]
 		def code
 		end
 	end

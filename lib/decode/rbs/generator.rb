@@ -14,19 +14,30 @@ module Decode
 		class Generator
 			# Initialize a new RBS generator.
 			# Sets up the RBS environment for type resolution.
-			def initialize
+			# @parameter include_private [bool] Whether to include private methods in RBS output.
+			def initialize(include_private: false)
 				# Set up RBS environment for type resolution
 				@loader = ::RBS::EnvironmentLoader.new()
 				@environment = ::RBS::Environment.from_loader(@loader).resolve_type_names
+				@include_private = include_private
 			end
+			
+			# @attribute [::RBS::EnvironmentLoader] The RBS environment loader.
+			attr :loader
+			
+			# @attribute [::RBS::Environment] The resolved RBS environment.
+			attr :environment
+			
+			# @attribute [bool] Whether to include private methods.
+			attr :include_private
 			
 			# Generate RBS declarations for the given index.
 			# @parameter index [Decode::Index] The index containing definitions to generate RBS for.
 			# @parameter output [IO] The output stream to write to.
 			def generate(index, output: $stdout)
 				# Build nested RBS AST structure using a hash for proper ||= behavior
-				declarations = {}
-				roots = {}
+				declarations = {} #: Hash[Array[Symbol], untyped]
+				roots = {} #: Hash[Array[Symbol], untyped]
 				
 				# Efficiently traverse the trie to find containers and their methods
 				index.trie.traverse do |lexical_path, node, descend|
@@ -58,8 +69,10 @@ module Decode
 			private
 			
 			# Build nested RBS declarations preserving the parent hierarchy.
-			# @returns [::RBS::AST::Declarations::Class | ::RBS::AST::Declarations::Module] If the definition has no parent, returns the declaration.
-			# @returns [Nil] If the definition has a parent, adds to parent's members.
+			# @parameter definition [Definition] The definition to build RBS for.
+			# @parameter declarations [Hash] The declarations hash to store results.
+			# @parameter index [Index] The index containing all definitions.
+			# @returns [untyped?] If the definition has no parent, returns the declaration, otherwise nil.
 			def build_nested_declaration(definition, declarations, index)
 				# Create the declaration for this definition using ||= to avoid duplicates
 				qualified_name = definition.qualified_name
@@ -81,22 +94,65 @@ module Decode
 				end
 			end
 			
-			# Convert a definition to RBS AST
+			# Convert a definition to RBS AST.
+			# @parameter definition [Definition] The definition to convert.
+			# @parameter index [Index] The index containing all definitions.
+			# @returns [untyped] The RBS AST declaration.
 			def definition_to_rbs(definition, index)
+				methods = get_methods_for_definition(definition, index)
+				constants = get_constants_for_definition(definition, index)
+				attributes = get_attributes_for_definition(definition, index)
+				
 				case definition
 				when Decode::Language::Ruby::Class
-					Class.new(definition).to_rbs_ast(get_methods_for_definition(definition, index), index)
+					Class.new(definition).to_rbs_ast(methods, constants, attributes, index)
 				when Decode::Language::Ruby::Module  
-					Module.new(definition).to_rbs_ast(get_methods_for_definition(definition, index), index)
+					Module.new(definition).to_rbs_ast(methods, constants, attributes, index)
 				end
 			end
 			
-			# Get methods for a given definition efficiently using trie lookup
+			# Get methods for a given definition efficiently using trie lookup.
+			# @parameter definition [Definition] The definition to get methods for.
+			# @parameter index [Index] The index containing all definitions.
+			# @returns [Array] Array of method definitions.
 			def get_methods_for_definition(definition, index)
 				# Use the trie to efficiently find methods for this definition
 				if node = index.trie.lookup(definition.full_path)
 					node.children.flat_map do |name, child|
-						child.values.select{|symbol| symbol.is_a?(Decode::Language::Ruby::Method) && symbol.public?}
+						child.values.select do |symbol| 
+							symbol.is_a?(Decode::Language::Ruby::Method) && 
+							(symbol.public? || symbol.protected? || (@include_private && symbol.private?))
+						end
+					end
+				else
+					[]
+				end
+			end
+			
+			# Get constants for a given definition efficiently using trie lookup.
+			# @parameter definition [Definition] The definition to get constants for.
+			# @parameter index [Index] The index containing all definitions.
+			# @returns [Array] Array of constant definitions.
+			def get_constants_for_definition(definition, index)
+				# Use the trie to efficiently find constants for this definition
+				if node = index.trie.lookup(definition.full_path)
+					node.children.flat_map do |name, child|
+						child.values.select{|symbol| symbol.is_a?(Decode::Language::Ruby::Constant)}
+					end
+				else
+					[]
+				end
+			end
+			
+			# Get attributes for a given definition efficiently using trie lookup.
+			# @parameter definition [Definition] The definition to get attributes for.
+			# @parameter index [Index] The index containing all definitions.
+			# @returns [Array] Array of attribute definitions.
+			def get_attributes_for_definition(definition, index)
+				# Use the trie to efficiently find attributes for this definition
+				if node = index.trie.lookup(definition.full_path)
+					node.children.flat_map do |name, child|
+						child.values.select{|symbol| symbol.is_a?(Decode::Language::Ruby::Attribute)}
 					end
 				else
 					[]
@@ -104,4 +160,4 @@ module Decode
 			end
 		end
 	end
-end 
+end

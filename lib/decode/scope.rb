@@ -10,11 +10,11 @@ module Decode
 	class Scope < Definition
 		# @returns [String] The name of the scope.
 		def short_form
-			@name
+			name.to_s
 		end
 		
 		# Scopes are always containers.
-		# @returns [Boolean] Always `true`.
+		# @returns [bool] Always `true`.
 		def container?
 			true
 		end

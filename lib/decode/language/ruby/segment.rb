@@ -12,7 +12,7 @@ module Decode
 			class Segment < Decode::Segment
 				# Initialize a new Ruby segment.
 				# @parameter comments [Array(String)] The comments for this segment.
-				# @parameter language [Language] The language instance.
+				# @parameter language [Generic] The language instance.
 				# @parameter node [Prism::Node] The syntax tree node.
 				# @parameter options [Hash] Additional options.
 				def initialize(comments, language, node, **options)
@@ -32,7 +32,7 @@ module Decode
 				end
 				
 				# The source code trailing the comments.
-				# @returns [String | Nil]
+				# @returns [String?]
 				def code
 					@expression.slice
 				end

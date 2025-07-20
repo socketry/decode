@@ -25,8 +25,8 @@ describe Decode::RBS::Type do
 		end
 		
 		it "detects tuple types with nil" do
-			expect(Decode::RBS::Type.nullable?(::RBS::Parser.parse_type("[String | nil]"))).to be == true
-			expect(Decode::RBS::Type.nullable?(::RBS::Parser.parse_type("[String, Integer | nil]"))).to be == true
+			expect(Decode::RBS::Type.nullable?(::RBS::Parser.parse_type("[String?]"))).to be == true
+			expect(Decode::RBS::Type.nullable?(::RBS::Parser.parse_type("[String, Integer?]"))).to be == true
 			expect(Decode::RBS::Type.nullable?(::RBS::Parser.parse_type("[String, Integer]"))).to be == false
 		end
 		
@@ -54,9 +54,9 @@ describe Decode::RBS::Type do
 			expect(type).to be_a(::RBS::Types::ClassInstance)
 			expect(type.name.name).to be == :Array
 			
-			# | Nil -> | nil
+			# | Nil -> ?
 			type = Decode::RBS::Type.parse("String | Nil")
-			expect(type).to be_a(::RBS::Types::Union)
+			expect(type).to be_a(::RBS::Types::Optional)
 			expect(Decode::RBS::Type.nullable?(type)).to be == true
 			
 			# Boolean -> bool

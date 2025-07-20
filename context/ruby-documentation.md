@@ -51,7 +51,7 @@ class User
 	
 	# Authenticate the user with the provided password.
 	# @parameter password [String] The password to verify.
-	# @returns [Boolean] True if authentication succeeds.
+	# @returns [bool] True if authentication succeeds.
 	def authenticate(password)
 		# Hash the password for comparison:
 		hashed = hash_password(password)
@@ -64,7 +64,7 @@ class User
 	# This method sets the user's status to inactive. Use this instead of
 	# the deprecated {disable!} method. The account status can be checked
 	# using `active?` or by examining the `:active` attribute.
-	# @returns [Boolean] Returns `true` if deactivation was successful.
+	# @returns [bool] Returns `true` if deactivation was successful.
 	def deactivate!
 		@active = false
 		true
@@ -187,7 +187,7 @@ Documents hash options (keyword arguments).
 
 ```ruby
 # @parameter user [User] The user object.
-# @option :cached [Boolean] Whether to cache the result.
+# @option :cached [bool] Whether to cache the result.
 # @option :timeout [Integer] Request timeout in seconds.
 def fetch_user_data(user, **options)
 	# ...

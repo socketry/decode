@@ -7,13 +7,14 @@ require_relative "source"
 
 module Decode
 	# Represents a prefix-trie data structure for fast lexical lookups.
+	# @rbs generic T
 	class Trie
 		# Represents a single node in the trie.
 		class Node
-			# Initialize a new trie node.
+			# Initialize an empty node.
 			def initialize
-				@values = nil
-				@children = Hash.new
+				@children = {}
+				@values = []
 			end
 			
 			# Generate a string representation of this node.
@@ -26,17 +27,17 @@ module Decode
 			alias to_s inspect
 			
 			# A mutable array of all values that terminate at this node.
-			# @attribute [Array | Nil] The values stored at this node, or nil if no values.
+			# @attribute [Array[T]?] The values stored at this node, or nil if no values.
 			attr_accessor :values
 			
 			# A hash table of all children nodes, indexed by name.
-			# @attribute [Hash(String, Node)] Child nodes indexed by their path component.
+			# @attribute [Hash(Symbol, Node)] Child nodes indexed by their path component.
 			attr :children
 			
 			# Look up a lexical path starting at this node.
-			# @parameter path [Array(String)] The path to resolve.
+			# @parameter path [Array(Symbol)] The path to resolve.
 			# @parameter index [Integer] The current index in the path (used for recursion).
-			# @returns [Node | Nil] The node at the specified path, or nil if not found.
+			# @returns [Node?] The node at the specified path, or nil if not found.
 			def lookup(path, index = 0)
 				if index < path.size
 					if child = @children[path[index]]
@@ -49,11 +50,12 @@ module Decode
 			
 			# Traverse the trie from this node.
 			# Invoke `descend.call` to traverse the children of the current node.
-			# @parameter path [Array(String)] The current lexical path.
+			# @parameter path [Array(Symbol)] The current lexical path.
 			# @yields {|path, node, descend| ...} Called for each node during traversal.
-			#   @parameter path [Array(String)] The current lexical path.
+			#   @parameter path [Array(Symbol)] The current lexical path.
 			#   @parameter node [Node] The current node which is being traversed.
 			#   @parameter descend [Proc] The recursive method for traversing children.
+			# @rbs (?Array[Symbol]) { (Array[Symbol], Node, Proc) -> void } -> void
 			def traverse(path = [], &block)
 				descend = lambda do
 					@children.each do |name, node|
@@ -75,8 +77,8 @@ module Decode
 		attr :root
 		
 		# Insert the specified value at the given path into the trie.
-		# @parameter path [Array(String)] The lexical path where the value will be inserted.
-		# @parameter value [Object] The value to insert at the specified path.
+		# @parameter path [Array(Symbol)] The lexical path where the value will be inserted.
+		# @parameter value [T] The value to insert at the specified path.
 		def insert(path, value)
 			node = @root
 			
@@ -86,24 +88,29 @@ module Decode
 			end
 			
 			# Add the value to the target node:
-			(node.values ||= []) << value
+			if node.values
+				node.values << value
+			else
+				node.values = [value]
+			end
 		end
 		
 		# Lookup the values at the specified path.
-		# @parameter path [Array(String)] The lexical path which contains the values.
-		# @returns [Node | Nil] The node at the specified path, or nil if not found.
+		# @parameter path [Array(Symbol)] The lexical path which contains the values.
+		# @returns [Node?] The node at the specified path, or nil if not found.
 		def lookup(path)
 			@root.lookup(path)
 		end
 		
 		# Enumerate all lexical scopes under the specified path.
-		# @parameter path [Array(String)] The starting path to enumerate from.
+		# @parameter path [Array(Symbol)] The starting path to enumerate from.
 		# @yields {|path, values| ...} Called for each path with values.
-		#   @parameter path [Array(String)] The lexical path.
-		#   @parameter values [Array(Object) | Nil] The values that exist at the given path.
+		#   @parameter path [Array(Symbol)] The lexical path.
+		#   @parameter values [Array[T]?] The values that exist at the given path.
+		# @rbs (?Array[Symbol]) { (Array[Symbol], (Array[T] | nil)) -> void } -> void
 		def each(path = [], &block)
-			if node = @root.lookup(path)
-				node.traverse do |path, node, descend|
+			if node = @root.lookup(path, 0)
+				node.traverse(path) do |path, node, descend|
 					yield path, node.values
 					
 					descend.call
@@ -113,11 +120,12 @@ module Decode
 		
 		# Traverse the trie starting from the specified path.
 		# See {Node#traverse} for details.
-		# @parameter path [Array(String)] The starting path to traverse from.
+		# @parameter path [Array(Symbol)] The starting path to traverse from.
 		# @yields {|path, node, descend| ...} Called for each node during traversal.
+		# @rbs (?Array[Symbol]) { (Array[Symbol], Node, Proc) -> void } -> void
 		def traverse(path = [], &block)
 			if node = @root.lookup(path)
-				node.traverse(&block)
+				node.traverse(path, &block)
 			end
 		end
 	end

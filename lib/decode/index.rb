@@ -11,10 +11,11 @@ require_relative "languages"
 module Decode
 	# Represents a list of definitions organised for quick lookup and lexical enumeration.
 	class Index
-		# Create and populate an index from the given paths.
-		# @parameter paths [Array(String)] The paths to index (files, directories, or glob patterns).
+		# Create and populate an index from the given paths.  
+		# @parameter paths [Array(String)] Variable number of paths to index (files, directories, or glob patterns).
 		# @parameter languages [Languages] The languages to support in this index.
 		# @returns [Index] A new index populated with definitions from the given paths.
+		# @rbs (*String, ?languages: Languages) -> Index
 		def self.for(*paths, languages: Languages.all)
 			# Resolve all paths to actual files:
 			resolved_paths = paths.flat_map do |path|
@@ -74,7 +75,7 @@ module Decode
 		attr :definitions
 		
 		# A (prefix) trie of lexically scoped definitions.
-		# @attribute [Trie] The trie structure for efficient lookups.
+		# @attribute [Trie[Definition]] The trie structure for efficient lookups.
 		attr :trie
 		
 		# Updates the index by parsing the specified files.
@@ -102,12 +103,12 @@ module Decode
 		
 		# Lookup the specified reference and return matching definitions.
 		# @parameter reference [Language::Reference] The reference to match.
-		# @parameter relative_to [Definition] Lookup the reference relative to the scope of this definition.
-		# @returns [Definition | Nil] The best matching definition, or nil if not found.
+		# @parameter relative_to [Definition?] Lookup the reference relative to the scope of this definition.
+		# @returns [Definition?] The best matching definition, or nil if not found.
 		def lookup(reference, relative_to: nil)
 			if reference.absolute? || relative_to.nil?
 				# Start from root scope:
-				lexical_path = []
+				lexical_path = [] #: Array[Symbol]
 			else
 				# Start from the given definition's scope:
 				lexical_path = relative_to.full_path.dup
@@ -122,7 +123,11 @@ module Decode
 				if node.children[path.first]
 					if target = node.lookup(path)
 						# Return the best matching definition:
-						return reference.best(target.values)
+						if values = target.values
+							return reference.best(values)
+						else
+							return nil
+						end
 					else
 						return nil
 					end

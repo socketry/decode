@@ -49,6 +49,20 @@ describe Decode::RBS::Generator do
 			end
 		end
 		
+		with "attribute type inference" do
+			it "generates correct RBS for attributes with type annotations" do
+				actual_output = generate_rbs_for_fixture("attribute_inference")
+				create_or_compare("attribute_inference", actual_output)
+			end
+		end
+		
+		with "constant type inference" do
+			it "generates correct RBS for constants with type annotations" do
+				actual_output = generate_rbs_for_fixture("constant_inference")
+				create_or_compare("constant_inference", actual_output)
+			end
+		end
+		
 		with "modules" do
 			it "generates correct RBS for modules" do
 				actual_output = generate_rbs_for_fixture("basic_module")
@@ -92,12 +106,6 @@ describe Decode::RBS::Generator do
 				expect(result).to be(:include?, "class Animal")
 				expect(result).to be(:include?, "class Dog < Animal")
 			end
-		end
-	end
-	
-	with "#initialize" do
-		it "creates a new generator instance" do
-			expect(generator).to be_a(Decode::RBS::Generator)
 		end
 	end
 end

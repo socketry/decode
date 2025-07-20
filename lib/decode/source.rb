@@ -13,23 +13,14 @@ module Decode
 		# @parameter language [Language::Generic] The language parser to use.
 		def initialize(path, language)
 			@path = path
-			@buffer = nil
 			@language = language
+			
+			@buffer = nil
 		end
 		
 		# The path of the source file.
-		# @attribute [String] A file-system path to the source file.
+		# @attribute [StringPath] A file-system path to the source file.
 		attr :path
-		
-		# The relative path of the source, if it is known.
-		# @returns [String] The relative path or the full path if relative path is unknown.
-		def relative_path
-			if @path.respond_to?(:relative_path)
-				@path.relative_path
-			else
-				@path
-			end
-		end
 		
 		# The language of the source file.
 		# @attribute [Language::Generic] The language parser for this source.
@@ -62,8 +53,8 @@ module Decode
 		end
 		
 		# Generate code representation with optional index for link resolution.
-		# @parameter index [Index] Optional index for resolving links.
-		# @parameter relative_to [Definition] Optional definition to resolve relative references.
+		# @parameter index [Index?] Optional index for resolving links.
+		# @parameter relative_to [Definition?] Optional definition to resolve relative references.
 		# @returns [String] The formatted code representation.
 		def code(index = nil, relative_to: nil)
 			@language.code_for(self.read, index, relative_to: relative_to)

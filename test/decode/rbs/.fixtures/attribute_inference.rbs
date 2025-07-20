@@ -1,0 +1,30 @@
+module TestModule
+  # A test class demonstrating attribute type inference.
+  class TestClass
+    attr_reader name(@name): String
+
+    attr_reader count(@count): Integer
+
+    attr_reader data(@data): Hash[String, Object]
+
+    attr_reader items(@items): Array[String]
+
+    @name: String
+
+    @count: Integer
+
+    @data: Hash[String, Object]
+
+    @items: Array[String]
+
+    # Initialize a new test instance.
+    public def initialize: (untyped name, untyped count) -> void
+  end
+
+  # A test module with attributes.
+  module AttributeModule
+    attr_reader settings(@settings): Hash[Symbol, String]
+
+    @settings: Hash[Symbol, String]
+  end
+end

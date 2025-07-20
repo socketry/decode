@@ -10,7 +10,7 @@ module Decode
 			# Initialize the reference.
 			# @parameter identifier [String] The identifier part of the reference.
 			# @parameter language [Language::Generic] The language this reference belongs to.
-			# @parameter lexical_path [Array(String) | nil] The lexical path scope for resolution.
+			# @parameter lexical_path [Array(String)?] The lexical path scope for resolution.
 			def initialize(identifier, language, lexical_path = nil)
 				@identifier = identifier
 				@language = language
@@ -72,12 +72,13 @@ module Decode
 			end
 			
 			# Find the best matching definition from a list.
-			# @parameter definitions [Array(String)] The definitions to choose from.
+			# @parameter definitions [Array(Definition)] The definitions to choose from.
+			# @returns [Definition?] The best matching definition, if any.
 			def best(definitions)
 				prefix, name = lexical_path.last
 				
-				first = nil
-				without_prefix = nil
+				first = nil #: Definition?
+				without_prefix = nil #: Definition?
 				
 				definitions.each do |definition|
 					first ||= definition
@@ -95,7 +96,7 @@ module Decode
 			end
 			
 			# The lexical path of the reference.
-			# @returns [Array(String)]
+			# @returns [Array(Symbol)]
 			def path
 				@path ||= self.lexical_path.map{|_, name| name.to_sym}
 			end

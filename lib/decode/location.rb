@@ -5,7 +5,18 @@
 
 module Decode
 	# Represents a location in a source file.
-	class Location < Struct.new(:path, :line)
+	class Location
+		def initialize(path, line)
+			@path = path
+			@line = line
+		end
+		
+		# @attribute [String] The path to the source file.
+		attr :path
+		
+		# @attribute [Integer] The line number in the source file.
+		attr :line
+		
 		# Generate a string representation of the location.
 		def to_s
 			"#{path}:#{line}"

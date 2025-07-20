@@ -19,6 +19,7 @@ module Decode
 				
 				TAGS = Comment::Tags.build do |tags|
 					tags["attribute"] = Comment::Attribute
+					tags["constant"] = Comment::Constant
 					tags["parameter"] = Comment::Parameter
 					tags["option"] = Comment::Option
 					tags["yields"] = Comment::Yields
@@ -37,7 +38,7 @@ module Decode
 				end
 				
 				# Get the parser for Ruby source code.
-				# @returns [Parser] The Ruby parser instance.
+				# @returns [Language::Ruby::Parser] The Ruby parser instance.
 				def parser
 					@parser ||= Parser.new(self)
 				end

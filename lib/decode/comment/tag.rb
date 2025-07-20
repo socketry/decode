@@ -8,9 +8,21 @@ require_relative "node"
 module Decode
 	module Comment
 		# Represents a documentation tag parsed from a comment directive.
+		# Subclasses should define a PATTERN constant for matching their specific syntax.
 		class Tag < Node
+			# @constant [Regexp] Abstract pattern constant - subclasses must override this.
+			PATTERN = /(?<never_matches_anything>\A\z)/
+			
+			# Abstract method: Build a tag from directive and match data.
+			# Subclasses must implement this method.
+			# @parameter directive [String] The directive that generated the tag.
+			# @parameter match [MatchData] The regex match data.
+			# @returns [Tag] A new tag instance.
+			def self.build(directive, match)
+				raise NotImplementedError, "Subclasses must implement build method"
+			end
 			# Build a pattern for bracketed content, supporting nested brackets.
-			# @parameter name [String] The name of the group.
+			# @parameter name [Symbol] The name of the group.
 			# @returns [String] The pattern.
 			def self.bracketed_content(name)
 				"(?<#{name}>(?:[^\\[\\]]+|\\[\\g<#{name}>\\])*)"

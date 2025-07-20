@@ -153,5 +153,222 @@ describe Decode::RBS::Class do
 				end
 			end
 		end
+		
+		with "#build_attributes_rbs (attribute type inference)" do
+			with "attributes with type annotations" do
+				let(:language) {Decode::Language::Ruby.new}
+				let(:comments) {["@attribute [String] The name of the person."]}
+				let(:attr_definition) {Decode::Language::Ruby::Attribute.new([:name], comments: comments, language: language)}
+				let(:definition) {Decode::Language::Ruby::Class.new([:TestClass], language: language)}
+				let(:rbs_class) {subject.new(definition)}
+				
+				it "generates attr_reader and instance variable declarations" do
+					attributes, instance_variables = rbs_class.send(:build_attributes_rbs, [attr_definition])
+					
+					# Should generate one attr_reader
+					expect(attributes).to have_attributes(length: be == 1)
+					expect(attributes.first).to be_a(::RBS::AST::Members::AttrReader)
+					expect(attributes.first.name).to be == :name
+					expect(attributes.first.ivar_name).to be == :"@name"
+					
+					# Should generate one instance variable
+					expect(instance_variables).to have_attributes(length: be == 1)
+					expect(instance_variables.first).to be_a(::RBS::AST::Members::InstanceVariable)
+					expect(instance_variables.first.name).to be == :"@name"
+				end
+				
+				it "correctly parses String type" do
+					attributes, _ = rbs_class.send(:build_attributes_rbs, [attr_definition])
+					expect(attributes.first.type).to be_a(::RBS::Types::ClassInstance)
+				end
+			end
+			
+			with "complex type annotations" do
+				let(:language) {Decode::Language::Ruby.new}
+				let(:comments) {["@attribute [Hash(String, Source)] Mapping of paths to sources."]}
+				let(:attr_definition) {Decode::Language::Ruby::Attribute.new([:sources], comments: comments, language: language)}
+				let(:definition) {Decode::Language::Ruby::Class.new([:TestClass], language: language)}
+				let(:rbs_class) {subject.new(definition)}
+				
+				it "correctly parses complex Hash types" do
+					attributes, instance_variables = rbs_class.send(:build_attributes_rbs, [attr_definition])
+					
+					expect(attributes.first.name).to be == :sources
+					expect(attributes.first.type).to be_a(::RBS::Types::ClassInstance)
+				end
+			end
+			
+			with "multiple attributes" do
+				let(:language) {Decode::Language::Ruby.new}
+				let(:name_attr) {Decode::Language::Ruby::Attribute.new([:name], comments: ["@attribute [String] The name."], language: language)}
+				let(:count_attr) {Decode::Language::Ruby::Attribute.new([:count], comments: ["@attribute [Integer] The count."], language: language)}
+				let(:definition) {Decode::Language::Ruby::Class.new([:TestClass], language: language)}
+				let(:rbs_class) {subject.new(definition)}
+				
+				it "handles multiple attributes correctly" do
+					attributes, instance_variables = rbs_class.send(:build_attributes_rbs, [name_attr, count_attr])
+					
+					expect(attributes).to have_attributes(length: be == 2)
+					expect(instance_variables).to have_attributes(length: be == 2)
+					
+					# Check names
+					names = attributes.map(&:name)
+					expect(names.include?(:name)).to be == true
+					expect(names.include?(:count)).to be == true
+				end
+			end
+			
+			with "attributes without type annotations" do
+				let(:language) {Decode::Language::Ruby.new}
+				let(:comments) {["This is just a regular comment without @attribute."]}
+				let(:attr_definition) {Decode::Language::Ruby::Attribute.new([:name], comments: comments, language: language)}
+				let(:definition) {Decode::Language::Ruby::Class.new([:TestClass], language: language)}
+				let(:rbs_class) {subject.new(definition)}
+				
+				it "ignores attributes without @attribute annotations" do
+					attributes, instance_variables = rbs_class.send(:build_attributes_rbs, [attr_definition])
+					
+					expect(attributes).to be(:empty?)
+					expect(instance_variables).to be(:empty?)
+				end
+			end
+			
+			with "malformed type annotations" do
+				let(:language) {Decode::Language::Ruby.new}
+				let(:comments) {["@attribute [InvalidType(((] Malformed type."]}
+				let(:attr_definition) {Decode::Language::Ruby::Attribute.new([:name], comments: comments, language: language)}
+				let(:definition) {Decode::Language::Ruby::Class.new([:TestClass], language: language)}
+				let(:rbs_class) {subject.new(definition)}
+				
+				it "gracefully handles malformed types by falling back to untyped" do
+					attributes, instance_variables = rbs_class.send(:build_attributes_rbs, [attr_definition])
+					
+					expect(attributes).to have_attributes(length: be == 1)
+					expect(attributes.first.type).to be_a(::RBS::Types::Bases::Any) # Should fallback to 'untyped'
+				end
+			end
+		end
+		
+		with "#to_rbs_ast with attribute definitions" do
+			let(:language) {Decode::Language::Ruby.new}
+			let(:comments) {["@attribute [String] The name of the person."]}
+			let(:attr_definition) {Decode::Language::Ruby::Attribute.new([:name], comments: comments, language: language)}
+			let(:definition) {Decode::Language::Ruby::Class.new([:TestClass], language: language)}
+			let(:rbs_class) {subject.new(definition)}
+			
+			it "includes attributes and instance variables in generated AST members" do
+				ast = rbs_class.to_rbs_ast([], [], [attr_definition])
+				
+				# Should include both attr_reader and instance variable
+				attr_readers = ast.members.select {|m| m.is_a?(::RBS::AST::Members::AttrReader)}
+				instance_vars = ast.members.select {|m| m.is_a?(::RBS::AST::Members::InstanceVariable)}
+				
+				expect(attr_readers).to have_attributes(length: be == 1)
+				expect(instance_vars).to have_attributes(length: be == 1)
+				expect(attr_readers.first.name).to be == :name
+				expect(instance_vars.first.name).to be == :"@name"
+			end
+		end
+		
+		with "#build_constant_rbs (constant type inference)" do
+			with "constants with type annotations" do
+				let(:language) {Decode::Language::Ruby.new}
+				let(:comments) {["@constant [String] The default configuration file name."]}
+				let(:const_definition) {Decode::Language::Ruby::Constant.new([:CONFIG_FILE], comments: comments, language: language)}
+				let(:definition) {Decode::Language::Ruby::Class.new([:TestClass], language: language)}
+				let(:rbs_class) {subject.new(definition)}
+				
+				it "generates constant RBS declaration" do
+					constant_rbs = rbs_class.send(:build_constant_rbs, const_definition)
+					
+					expect(constant_rbs).to be_a(::RBS::AST::Declarations::Constant)
+					expect(constant_rbs.name).to be == :CONFIG_FILE
+					expect(constant_rbs.type).to be_a(::RBS::Types::ClassInstance)
+				end
+				
+				it "correctly parses String type" do
+					constant_rbs = rbs_class.send(:build_constant_rbs, const_definition)
+					expect(constant_rbs.type).to be_a(::RBS::Types::ClassInstance)
+				end
+			end
+			
+			with "complex constant types" do
+				let(:language) {Decode::Language::Ruby.new}
+				let(:comments) {["@constant [Hash(Symbol, String)] Default configuration values."]}
+				let(:const_definition) {Decode::Language::Ruby::Constant.new([:DEFAULT_CONFIG], comments: comments, language: language)}
+				let(:definition) {Decode::Language::Ruby::Class.new([:TestClass], language: language)}
+				let(:rbs_class) {subject.new(definition)}
+				
+				it "correctly parses complex Hash types" do
+					constant_rbs = rbs_class.send(:build_constant_rbs, const_definition)
+					
+					expect(constant_rbs.name).to be == :DEFAULT_CONFIG
+					expect(constant_rbs.type).to be_a(::RBS::Types::ClassInstance)
+				end
+			end
+			
+			with "constants without type annotations" do
+				let(:language) {Decode::Language::Ruby.new}
+				let(:comments) {["This is just a regular comment without @constant."]}
+				let(:const_definition) {Decode::Language::Ruby::Constant.new([:SOME_CONSTANT], comments: comments, language: language)}
+				let(:definition) {Decode::Language::Ruby::Class.new([:TestClass], language: language)}
+				let(:rbs_class) {subject.new(definition)}
+				
+				it "ignores constants without @constant annotations" do
+					constant_rbs = rbs_class.send(:build_constant_rbs, const_definition)
+					expect(constant_rbs).to be_nil
+				end
+			end
+			
+			with "malformed constant type annotations" do
+				let(:language) {Decode::Language::Ruby.new}
+				let(:comments) {["@constant [InvalidType(((] Malformed type."]}
+				let(:const_definition) {Decode::Language::Ruby::Constant.new([:BAD_CONSTANT], comments: comments, language: language)}
+				let(:definition) {Decode::Language::Ruby::Class.new([:TestClass], language: language)}
+				let(:rbs_class) {subject.new(definition)}
+				
+				it "gracefully handles malformed types by falling back to untyped" do
+					constant_rbs = rbs_class.send(:build_constant_rbs, const_definition)
+					
+					expect(constant_rbs).not.to be_nil
+					expect(constant_rbs.name).to be == :BAD_CONSTANT
+					expect(constant_rbs.type).to be_a(::RBS::Types::Bases::Any) # Should fallback to 'untyped'
+				end
+			end
+			
+			with "Array and Union types" do
+				let(:language) {Decode::Language::Ruby.new}
+				let(:comments) {["@constant [Array(String)] List of supported formats."]}
+				let(:const_definition) {Decode::Language::Ruby::Constant.new([:SUPPORTED_FORMATS], comments: comments, language: language)}
+				let(:definition) {Decode::Language::Ruby::Class.new([:TestClass], language: language)}
+				let(:rbs_class) {subject.new(definition)}
+				
+				it "correctly parses Array types" do
+					constant_rbs = rbs_class.send(:build_constant_rbs, const_definition)
+					
+					expect(constant_rbs.name).to be == :SUPPORTED_FORMATS
+					expect(constant_rbs.type).to be_a(::RBS::Types::ClassInstance)
+				end
+			end
+		end
+		
+		with "#to_rbs_ast with constant definitions" do
+			let(:language) {Decode::Language::Ruby.new}
+			let(:comments) {["@constant [String] The version string."]}
+			let(:const_definition) {Decode::Language::Ruby::Constant.new([:VERSION], comments: comments, language: language)}
+			let(:definition) {Decode::Language::Ruby::Class.new([:TestClass], language: language)}
+			let(:rbs_class) {subject.new(definition)}
+			
+			it "includes constants in generated AST members" do
+				ast = rbs_class.to_rbs_ast([], [const_definition], [])
+				
+				# Should include constants in members
+				constants = ast.members.select {|m| m.is_a?(::RBS::AST::Declarations::Constant)}
+				
+				expect(constants).to have_attributes(length: be == 1)
+				expect(constants.first.name).to be == :VERSION
+				expect(constants.first.type).to be_a(::RBS::Types::ClassInstance)
+			end
+		end
 	end
 end

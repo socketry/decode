@@ -13,6 +13,7 @@ module Decode
 				# Create a reference from a constant node.
 				# @parameter node [Prism::Node] The constant node.
 				# @parameter language [Language::Generic] The language instance.
+				# @returns [Reference] A new reference instance.
 				def self.from_const(node, language)
 					lexical_path = append_const(node)
 					
@@ -51,6 +52,7 @@ module Decode
 				
 				# Split a Ruby identifier into prefix and name components.
 				# @parameter text [String] The text to split.
+				# @returns [Array] Array of prefix and name pairs.
 				def split(text)
 					text.scan(/(::|\.|#|:)?([^:.#]+)/)
 				end

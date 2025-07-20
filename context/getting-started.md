@@ -71,7 +71,7 @@ source_code = <<~RUBY
     # Initialize a new user.
     # @parameter email [String] The user's email address.
     # @parameter options [Hash] Additional options.
-    # @option :active [Boolean] Whether the account is active.
+    # @option :active [bool] Whether the account is active.
     # @raises [ArgumentError] If email is invalid.
     def initialize(email, options = {})
       # Validate the email format:

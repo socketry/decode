@@ -24,7 +24,7 @@ module Decode
 			end
 			
 			# Extract comment from the definition's documentation.
-			# @returns [RBS::AST::Comment | Nil] The RBS comment object.
+			# @returns [RBS::AST::Comment?] The RBS comment object.
 			def comment
 				@comment ||= extract_comment
 			end
@@ -41,13 +41,13 @@ module Decode
 			
 			# Extract comment from definition documentation.
 			# @parameter definition [Definition] The definition to extract comment from (defaults to @definition).
-			# @returns [RBS::AST::Comment, nil] The extracted comment or nil if no documentation.
+			# @returns [RBS::AST::Comment?] The extracted comment or nil if no documentation.
 			def extract_comment(definition = @definition)
 				documentation = definition.documentation
 				return nil unless documentation
 				
 				# Extract the main description text (non-tag content)
-				comment_lines = []
+				comment_lines = [] #: Array[String]
 				
 				documentation.children&.each do |child|
 					if child.is_a?(Decode::Comment::Text)
@@ -68,4 +68,4 @@ module Decode
 			end
 		end
 	end
-end 
+end

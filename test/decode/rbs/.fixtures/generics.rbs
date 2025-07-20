@@ -7,7 +7,7 @@ class Container[T]
   public def add: (T item) -> self
 
   # Get the first item.
-  public def first: () -> (T | nil)
+  public def first: () -> T?
 
   # Check if the container is empty.
   public def empty?: () -> bool

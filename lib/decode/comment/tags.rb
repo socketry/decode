@@ -10,7 +10,10 @@ module Decode
 		# Represents a collection of documentation tags and their parsing logic.
 		class Tags
 			# Build a tags parser with directive mappings.
-			# @parameter block [Proc] A block that yields the directives hash.
+			# @yields {|directives| directives['directive'] = Class}
+			# 	@parameter directives [Hash(String, _Directive)] The directive mappings hash to configure.
+			# @returns [Tags] A new tags parser with the configured directives.
+			# @rbs () { (Hash[String, Class]) -> void } -> Tags
 			def self.build
 				directives = Hash.new
 				
@@ -20,7 +23,7 @@ module Decode
 			end
 			
 			# Initialize a new tags parser.
-			# @parameter directives [Hash(String, Class)] The directive mappings.
+			# @parameter directives [Hash(String, _Directive)] The directive mappings.
 			def initialize(directives)
 				@directives = directives
 			end
@@ -32,12 +35,16 @@ module Decode
 				line.start_with?("  " * level) || line.start_with?("\t" * level)
 			end
 			
+			# @constant [Regexp] Pattern for matching tag directives in comment lines.
 			PATTERN = /\A\s*@(?<directive>.*?)(\s+(?<remainder>.*?))?\Z/
 			
 			# Parse documentation tags from lines.
 			# @parameter lines [Array(String)] The lines to parse.
 			# @parameter level [Integer] The indentation level.
-			# @parameter block [Proc] A block to yield parsed tags to.
+			# @yields {|node| process parsed node}
+			# 	@parameter node [Node | Text] The parsed node (either a structured tag or plain text).
+			# @returns [void] Parses tags from lines and yields them to the block.
+			# @rbs (Array[String] lines, ?Integer level) { (Node | Text) -> void } -> void
 			def parse(lines, level = 0, &block)
 				while line = lines.first
 					# Is it at the right indentation level:
@@ -48,9 +55,13 @@ module Decode
 					
 					# Match it against a tag:
 					if match = PATTERN.match(line)
-						if klass = @directives[match[:directive]]
+						directive = match[:directive] #: String
+						remainder = match[:remainder] #: String
+						
+						# @type var klass: _Directive?
+						if klass = @directives[directive]
 							yield klass.parse(
-								match[:directive], match[:remainder],
+								directive, remainder,
 								lines, self, level
 							)
 						else

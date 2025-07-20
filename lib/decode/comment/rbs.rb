@@ -34,10 +34,10 @@ module Decode
 			
 			# Initialize a new RBS pragma.
 			# @parameter directive [String] The directive name.
-			# @parameter text [String] The RBS type annotation text.
-			def initialize(directive, text = nil)
+			# @parameter text [String?] The RBS type annotation text.
+			def initialize(directive, text)
 				super(directive)
-				@text = text&.strip
+				@text = text&.strip || ""
 			end
 			
 			# The RBS type annotation text.
@@ -45,13 +45,13 @@ module Decode
 			attr :text
 			
 			# Check if this is a generic type declaration.
-			# @returns [Boolean] True if this is a generic declaration.
+			# @returns [bool] True if this is a generic declaration.
 			def generic?
-				@text&.start_with?("generic ")
+				@text.start_with?("generic ")
 			end
 			
 			# Extract the generic type parameter name.
-			# @returns [String | Nil] The generic type parameter name, or nil if not a generic.
+			# @returns [String?] The generic type parameter name, or nil if not a generic.
 			def generic_parameter
 				if generic?
 					# Extract the parameter name from "generic T" or "generic T, U"
@@ -61,13 +61,13 @@ module Decode
 			end
 			
 			# Check if this is a method type signature.
-			# @returns [Boolean] True if this is a method signature.
+			# @returns [bool] True if this is a method signature.
 			def method_signature?
 				@text && !generic?
 			end
 			
 			# Get the method type signature text.
-			# @returns [String | Nil] The method signature text, or nil if not a method signature.
+			# @returns [String?] The method signature text, or nil if not a method signature.
 			def method_signature
 				method_signature? ? @text : nil
 			end

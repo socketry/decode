@@ -65,7 +65,7 @@ module Decode
 			end
 			
 			# Get the parser for this language.
-			# @returns [Parser | Nil] The parser instance, or nil if not available.
+			# @returns [untyped] The parser instance, or nil if not available.
 			def parser
 				nil
 			end
@@ -91,6 +91,15 @@ module Decode
 				if parser = self.parser
 					parser.segments_for(source, &block)
 				end
+			end
+			
+			# Generate a code representation with syntax highlighting and link resolution.
+			# @parameter text [String] The source code text to format.
+			# @parameter index [Index] The index for resolving references.
+			# @parameter relative_to [Definition] The definition to resolve relative references from.
+			# @returns [untyped] A formatted code object with syntax highlighting.
+			def code_for(text, index, relative_to: nil)
+				raise NotImplementedError, "Code generation is not implemented for #{self.class}!"
 			end
 		end
 	end
