@@ -22,6 +22,12 @@ Please see the [project documentation](https://socketry.github.io/decode/) for m
 
 Please see the [project releases](https://socketry.github.io/decode/releases/index) for all releases.
 
+### v0.24.4
+
+  - Add support for `@constant [Type] Description.` tags.
+  - Add support for instance variable type inference from `@attribute` tags.
+  - Add support for method visibility in RBS output.
+
 ### v0.24.0
 
   - [Introduce support for RBS signature generation](https://socketry.github.io/decode/releases/index#introduce-support-for-rbs-signature-generation)

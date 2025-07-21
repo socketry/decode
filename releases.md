@@ -1,6 +1,6 @@
 # Releases
 
-## Unreleased
+## v0.24.4
 
   - Add support for `@constant [Type] Description.` tags.
   - Add support for instance variable type inference from `@attribute` tags.
