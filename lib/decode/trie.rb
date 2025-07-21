@@ -14,7 +14,7 @@ module Decode
 			# Initialize an empty node.
 			def initialize
 				@children = {}
-				@values = []
+				@values = nil
 			end
 			
 			# Generate a string representation of this node.
