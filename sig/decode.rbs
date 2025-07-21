@@ -852,7 +852,8 @@ module Decode
 
     @line: Integer
 
-    public def initialize: (untyped path, untyped line) -> void
+    # Initialize a new location.
+    public def initialize: (String path, Integer line) -> void
 
     # Generate a string representation of the location.
     public def to_s: () -> untyped
@@ -994,6 +995,7 @@ module Decode
       private def build_attributes_rbs: (Array attribute_definitions) -> Array
     end
 
+    # Utilities for working with RBS types.
     module Type
       # Check if an RBS type represents a nullable/optional type
       # This method recursively traverses the type tree to find nil anywhere

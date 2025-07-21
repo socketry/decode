@@ -6,6 +6,9 @@
 module Decode
 	# Represents a location in a source file.
 	class Location
+		# Initialize a new location.
+		# @parameter path [String] The path to the source file.
+		# @parameter line [Integer] The line number in the source file.
 		def initialize(path, line)
 			@path = path
 			@line = line

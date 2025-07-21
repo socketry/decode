@@ -8,6 +8,7 @@ require "console"
 
 module Decode
 	module RBS
+		# Utilities for working with RBS types.
 		module Type
 			# Check if an RBS type represents a nullable/optional type
 			# This method recursively traverses the type tree to find nil anywhere
