@@ -164,7 +164,7 @@ module Decode
 					# Handle rest parameter (*args):
 					if node.parameters.respond_to?(:rest) && node.parameters.rest
 						rest_param = node.parameters.rest
-						name = rest_param.name || :args
+						name = rest_param.respond_to?(:name) && rest_param.name ? rest_param.name : :args
 						base_type = doc_types[name.to_s] || ::RBS::Parser.parse_type("untyped")
 						
 						rest_positionals = ::RBS::Types::Function::Param.new(
@@ -192,7 +192,7 @@ module Decode
 					# Handle keyword rest parameter (**kwargs):
 					if node.parameters.respond_to?(:keyword_rest) && node.parameters.keyword_rest
 						rest_param = node.parameters.keyword_rest
-						if rest_param.name
+						if rest_param.respond_to?(:name) && rest_param.name
 							name = rest_param.name
 							base_type = doc_types[name.to_s] || ::RBS::Parser.parse_type("untyped")
 							
@@ -321,7 +321,7 @@ module Decode
 				# Handle rest parameter (*args):
 				if node.parameters.respond_to?(:rest) && node.parameters.rest
 					rest_param = node.parameters.rest
-					name = rest_param.name || :args
+					name = rest_param.respond_to?(:name) && rest_param.name ? rest_param.name : :args
 					base_type = doc_types[name.to_s] || ::RBS::Parser.parse_type("untyped")
 					# Rest parameters should be `Array[T]`:
 					array_type = ::RBS::Types::ClassInstance.new(
@@ -407,7 +407,7 @@ module Decode
 				# Handle keyword rest parameter (**kwargs):
 				if node.parameters.respond_to?(:keyword_rest) && node.parameters.keyword_rest
 					rest_param = node.parameters.keyword_rest
-					if rest_param.name
+					if rest_param.respond_to?(:name) && rest_param.name
 						name = rest_param.name
 						base_type = doc_types[name.to_s] || ::RBS::Parser.parse_type("untyped")
 						# Keyword rest should be `Hash[Symbol, T]`:

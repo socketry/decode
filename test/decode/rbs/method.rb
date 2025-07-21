@@ -13,6 +13,8 @@ require "decode/comment/returns"
 require "decode/comment/parameter"
 require "decode/comment/option"
 require "decode/comment/yields"
+require "decode/source"
+require "decode/index"
 
 describe Decode::RBS::Method do
 	let(:language) {Decode::Language::Ruby.new}
@@ -295,6 +297,25 @@ describe Decode::RBS::Method do
 					expect(comment).to be_nil
 				end
 			end
+		end
+	end
+	
+	with "parameter forwarding" do
+		let(:fixture_path) { File.expand_path(".fixtures/parameter_forwarding.rb", __dir__) }
+		let(:source) { Decode::Source.new(fixture_path, Decode::Language::Ruby.new) }
+		let(:definitions) { source.definitions.to_a }
+		let(:method_def) { definitions.find { |d| d.name == :forward } }
+		let(:method_wrapper) { Decode::RBS::Method.new(method_def) }
+		
+		it "handles parameter forwarding syntax without error" do
+			# This should not raise NoMethodError for ForwardingParameterNode
+			expect { method_wrapper.to_rbs_ast(nil) }.not.to raise_exception
+		end
+		
+		it "generates valid RBS for forwarding parameters" do
+			rbs_ast = method_wrapper.to_rbs_ast(nil)
+			expect(rbs_ast).to be_a(::RBS::AST::Members::MethodDefinition)
+			expect(rbs_ast.name).to be == :forward
 		end
 	end
 end
