@@ -21,6 +21,12 @@ module Decode
 				
 				attr :old_name
 				
+				# Aliases don't require separate documentation as they reference existing methods.
+				# @returns [bool] Always false for aliases.
+				def coverage_relevant?
+					false
+				end
+				
 				# Generate a short form representation of the alias.
 				def short_form
 					"alias #{self.name} #{@old_name}"

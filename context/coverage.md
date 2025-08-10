@@ -254,7 +254,7 @@ def coverage_percentage(root)
   
   index.trie.traverse do |path, node, descend|
     node.values&.each do |definition|
-      if definition.public?
+      if definition.coverage_relevant?
         total += 1
         documented += 1 if definition.comments&.any?
       end

@@ -22,7 +22,7 @@ def coverage(root)
 		public_definition = node.values.nil?
 		
 		node.values&.each do |definition|
-			if definition.public?
+			if definition.coverage_relevant?
 				level = path.size
 				
 				if definition.documented?

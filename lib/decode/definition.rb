@@ -82,6 +82,11 @@ module Decode
 			true
 		end
 		
+		# @returns [bool] If the definition should be counted in coverage metrics.
+		def coverage_relevant?
+			self.public?
+		end
+		
 		# Whether the definition has documentation.
 		# @returns [bool] True if the definition has non-empty comments.
 		def documented?
