@@ -1,5 +1,9 @@
 # Releases
 
+## Unreleased
+
+  - Singleton classes are not relevant for coverage, so they are now ignored by the coverage reporter.
+
 ## v0.24.4
 
   - Add support for `@constant [Type] Description.` tags.

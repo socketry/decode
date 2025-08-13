@@ -78,6 +78,11 @@ module Decode
 				# The long form is the same as the short form.
 				alias long_form short_form
 				
+				# Coverage is not relevant for singleton classes.
+				def coverage_relevant?
+					false
+				end
+				
 				private
 				
 				def absolute_path
