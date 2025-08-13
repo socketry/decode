@@ -22,6 +22,10 @@ Please see the [project documentation](https://socketry.github.io/decode/) for m
 
 Please see the [project releases](https://socketry.github.io/decode/releases/index) for all releases.
 
+### v0.25.0
+
+  - Singleton classes are not relevant for coverage, so they are now ignored by the coverage reporter.
+
 ### v0.24.4
 
   - Add support for `@constant [Type] Description.` tags.
