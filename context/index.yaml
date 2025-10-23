@@ -10,9 +10,10 @@ files:
 - path: getting-started.md
   title: Getting Started
   description: This guide explains how to use `decode` for source code analysis.
-- path: code-coverage.md
-  title: Code Coverage
-  description: This guide explains how to compute documentation code coverage.
+- path: documentation-coverage.md
+  title: Documentation Coverage
+  description: This guide explains how to test and monitor documentation coverage
+    in your Ruby projects using the Decode gem's built-in bake tasks.
 - path: ruby-documentation.md
   title: Ruby Documentation
   description: This guide covers documentation practices and pragmas supported by

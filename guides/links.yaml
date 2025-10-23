@@ -1,6 +1,6 @@
 getting-started:
   order: 1
-code-coverage:
+documentation-coverage:
   order: 2
 extract-symbols:
   order: 3
