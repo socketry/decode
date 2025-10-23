@@ -21,6 +21,7 @@ module Decode
 			def self.build(directive, match)
 				raise NotImplementedError, "Subclasses must implement build method"
 			end
+			
 			# Build a pattern for bracketed content, supporting nested brackets.
 			# @parameter name [Symbol] The name of the group.
 			# @returns [String] The pattern.

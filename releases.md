@@ -1,5 +1,9 @@
 # Releases
 
+## Unreleased
+
+  - Add support for `@example` pragmas in Ruby documentation comments.
+
 ## v0.25.0
 
   - Singleton classes are not relevant for coverage, so they are now ignored by the coverage reporter.

@@ -27,6 +27,8 @@ module Decode
 				
 				tags["public"] = Comment::Pragma
 				tags["private"] = Comment::Pragma
+				
+				tags["example"] = Comment::Example
 			end
 			
 			# Initialize a new generic language.

@@ -24,6 +24,10 @@ Please see the [project documentation](https://socketry.github.io/decode/) for m
 
 Please see the [project releases](https://socketry.github.io/decode/releases/index) for all releases.
 
+### Unreleased
+
+  - Add support for `@example` pragmas in Ruby documentation comments.
+
 ### v0.25.0
 
   - Singleton classes are not relevant for coverage, so they are now ignored by the coverage reporter.

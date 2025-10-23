@@ -247,14 +247,14 @@ Documents block parameters and behavior.
 
 ```ruby
 # @yields {|item| ...} Each item in the collection.
-#   @parameter item [Object] The current item being processed.
+# 	@parameter item [Object] The current item being processed.
 def each_item(&block)
 	items.each(&block)
 end
 
 # @yields {|user, index| ...} User and their index.
-#   @parameter user [User] The current user.
-#   @parameter index [Integer] The user's position in the list.
+# 	@parameter user [User] The current user.
+# 	@parameter index [Integer] The user's position in the list.
 def each_user_with_index(&block)
 	users.each_with_index(&block)
 end
@@ -305,6 +305,39 @@ Indicates that a method may yield control.
 # @asynchronous
 def fetch_data
 	# This method may yield control during execution.
+end
+```
+
+### Example Code
+
+#### `@example Title?`
+
+Includes an example usage snippet for a method or definition. The `@example` directive can have an optional title on the same line, followed by one or more indented lines of code:
+
+```ruby
+# @example Create a new thing
+# 	thing = Thing.new
+# 	thing.process
+def process
+	# ...
+end
+```
+
+Behaviour:
+
+- The optional title is captured verbatim (e.g., `"Create a new thing"`).
+- Indented lines following the directive are captured as the example code.
+- When parsed, examples are available as `Decode::Comment::Example` nodes with:
+	- `title` – `String?`, the optional example title.
+	- `text` – `Array(String)?`, the raw code lines (including leading indentation).
+	- `code` – `String?`, the code as a single string with leading indentation removed (convenience).
+
+Multiple `@example` pragmas can be used on the same definition to show different scenarios.
+
+```ruby
+definition.documentation.filter(Decode::Comment::Example) do |example|
+	puts "Title: #{example.title.inspect}"
+	puts example.code # => joined string with indentation removed
 end
 ```
 

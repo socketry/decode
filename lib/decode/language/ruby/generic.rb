@@ -34,6 +34,8 @@ module Decode
 					tags["public"] = Comment::Pragma
 					tags["private"] = Comment::Pragma
 					
+					tags["example"] = Comment::Example
+					
 					tags["rbs"] = Comment::RBS
 				end
 				

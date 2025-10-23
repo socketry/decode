@@ -15,6 +15,7 @@ require_relative "comment/raises"
 require_relative "comment/returns"
 require_relative "comment/throws"
 require_relative "comment/yields"
+require_relative "comment/example"
 
 module Decode
 	# Structured access to a set of comment lines.
