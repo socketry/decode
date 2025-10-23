@@ -1,6 +1,6 @@
 # Releases
 
-## Unreleased
+## v0.26.0
 
   - Add support for `@example` pragmas in Ruby documentation comments.
 
