@@ -14,7 +14,7 @@ Please see the [project documentation](https://socketry.github.io/decode/) for m
 
   - [Getting Started](https://socketry.github.io/decode/guides/getting-started/index) - This guide explains how to use `decode` for source code analysis.
 
-  - [Code Coverage](https://socketry.github.io/decode/guides/code-coverage/index) - This guide explains how to compute documentation code coverage.
+  - [Documentation Coverage](https://socketry.github.io/decode/guides/documentation-coverage/index) - This guide explains how to test and monitor documentation coverage in your Ruby projects using the Decode gem's built-in bake tasks.
 
   - [Extract Symbols](https://socketry.github.io/decode/guides/extract-symbols/index) - This example demonstrates how to extract symbols using the index. An instance of <code class="language-ruby">Decode::Index</code> is used for loading symbols from source code files. These symbols are available as a flat list and as a trie structure. You can look up specific symbols using a reference using <code class="language-ruby">Decode::Index\#lookup</code>.
 

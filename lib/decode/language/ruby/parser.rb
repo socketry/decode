@@ -404,8 +404,8 @@ module Decode
 					saved_visibility = @visibility
 					@visibility = visibility
 					yield
-						ensure
-							@visibility = saved_visibility
+				ensure
+					@visibility = saved_visibility
 				end
 				
 				NAME_ATTRIBUTE = /\A@name\s+(?<value>.*?)\Z/

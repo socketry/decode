@@ -7,8 +7,6 @@ source "https://rubygems.org"
 
 gemspec
 
-gem "agent-context"
-
 group :maintenance, optional: true do
 	gem "bake-gem"
 	gem "bake-modernize"
@@ -33,3 +31,5 @@ group :test do
 	
 	gem "build-files"
 end
+
+gem "rubocop-md", "~> 2.0", group: :test
