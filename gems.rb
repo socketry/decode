@@ -14,7 +14,8 @@ group :maintenance, optional: true do
 	gem "bake-modernize"
 	gem "bake-releases"
 	
-	gem "bake-github-pages"
+	gem "agent-context"
+	
 	gem "utopia-project"
 end
 

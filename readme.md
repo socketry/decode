@@ -18,6 +18,8 @@ Please see the [project documentation](https://socketry.github.io/decode/) for m
 
   - [Extract Symbols](https://socketry.github.io/decode/guides/extract-symbols/index) - This example demonstrates how to extract symbols using the index. An instance of <code class="language-ruby">Decode::Index</code> is used for loading symbols from source code files. These symbols are available as a flat list and as a trie structure. You can look up specific symbols using a reference using <code class="language-ruby">Decode::Index\#lookup</code>.
 
+  - [Ruby Documentation](https://socketry.github.io/decode/guides/ruby-documentation/index) - This guide covers documentation practices and pragmas supported by the Decode gem for documenting Ruby code. These pragmas provide structured documentation that can be parsed and used to generate API documentation and achieve complete documentation coverage.
+
 ## Releases
 
 Please see the [project releases](https://socketry.github.io/decode/releases/index) for all releases.

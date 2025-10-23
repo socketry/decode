@@ -4,3 +4,5 @@ code-coverage:
   order: 2
 extract-symbols:
   order: 3
+ruby-documentation:
+  order: 4

@@ -1,0 +1,21 @@
+# Automatically generated context index for Utopia::Project guides.
+# Do not edit then files in this directory directly, instead edit the guides and then run `bake utopia:project:agent:context:update`.
+---
+description: Code analysis for documentation generation.
+metadata:
+  documentation_uri: https://socketry.github.io/decode/
+  funding_uri: https://github.com/sponsors/socketry/
+  source_code_uri: https://github.com/socketry/decode.git
+files:
+- path: getting-started.md
+  title: Getting Started
+  description: This guide explains how to use `decode` for source code analysis.
+- path: code-coverage.md
+  title: Code Coverage
+  description: This guide explains how to compute documentation code coverage.
+- path: ruby-documentation.md
+  title: Ruby Documentation
+  description: This guide covers documentation practices and pragmas supported by
+    the Decode gem for documenting Ruby code. These pragmas provide structured documentation
+    that can be parsed and used to generate API documentation and achieve complete
+    documentation coverage.
