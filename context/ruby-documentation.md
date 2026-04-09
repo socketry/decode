@@ -9,7 +9,9 @@ This guide covers documentation practices and pragmas supported by the Decode ge
 #### Definition Documentation
 
 - Full sentences: All documentation for definitions (classes, modules, methods) should be written as complete sentences with proper grammar and punctuation.
-- Class documentation: Documentation for classes should generally start with "Represents a ..." to clearly indicate what the class models or encapsulates.
+- Class documentation: Should directly describe what the class *is* or *does*.
+	- For data/model classes, "A user account in the system." works well.
+	- For functional classes (servers, clients, connections), lead with what the class does: "An HTTP client that manages persistent connections...".
 - Method documentation: Should clearly describe what the method does, not how it does it.
 - Markdown format: All documentation comments are written in Markdown format, allowing for rich formatting including lists, emphasis, code blocks, and links.
 
@@ -32,8 +34,12 @@ This guide covers documentation practices and pragmas supported by the Decode ge
 
 #### Examples
 
+##### Data/Model Classes
+
+For classes that model domain concepts, describe what the class is:
+
 ```ruby
-# Represents a user account in the system.
+# A user account in the system.
 class User
 	# @attribute [String] The user's email address.
 	attr_reader :email
@@ -70,25 +76,34 @@ class User
 		true
 	end
 end
+```
 
-# Represents a collection of users with search capabilities.
-class UserCollection
-	# Find users matching the given criteria.
-	# @parameter criteria [Hash] Search parameters.
-	# @returns [Array(User)] Matching users.
-	def find(**criteria)
-		# Start with all users:
-		results = @users.dup
-		
-		# Apply each filter criterion:
-		criteria.each do |key, value|
-			results = filter_by(results, key, value)
-		end
-		
-		results
+##### Functional/Service Classes
+
+For classes that *do* something (clients, servers, processors), lead with what the class does:
+
+```ruby
+# An HTTP client that manages persistent connections to a remote server, with automatic retries for idempotent requests.
+class Client
+	# Send a request to the remote server.
+	# @parameter request [Protocol::HTTP::Request] The request to send.
+	# @returns [Protocol::HTTP::Response] The response from the server.
+	def call(request)
+		# ...
+	end
+	
+	# Close the client and release all connections.
+	def close
+		# ...
 	end
 end
+
+# Raised when a connection to the remote server cannot be established.
+class ConnectionError < StandardError
+end
 ```
+
+Note the difference: `User` is described as a thing ("A user account..."), while `Client` is described by what it does ("An HTTP client that manages..."), and `ConnectionError` is described by when it occurs ("Raised when...").
 
 **Key formatting examples from above:**
 - `{disable!}` - Creates a link to the `disable!` method (relative reference)
@@ -155,7 +170,7 @@ Type signatures are used to specify the expected types of parameters, return val
 Documents class attributes, instance variables, and `attr_*` declarations. Prefer to have one attribute per line for clarity.
 
 ```ruby
-# Represents a person with basic attributes.
+# A person with basic attributes.
 class Person
 	# @attribute [String] The person's full name.
 	attr_reader :name

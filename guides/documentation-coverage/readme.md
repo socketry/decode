@@ -60,7 +60,7 @@ A definition is considered documented if it has:
 - A `@namespace` pragma (for organizational modules).
 
 ```ruby
-# Represents a user in the system.
+# A user in the system.
 class MyClass
 end
 
@@ -130,7 +130,7 @@ Returns true if authentication is successful.
 ### Document all public APIs
 
 ```ruby
-# Represents a user management system.
+# A user account with authentication and email.
 class User
 	# @attribute [String] The user's email address.
 	attr_reader :email
