@@ -35,6 +35,7 @@ module Decode
 						name: generic.to_sym,
 						variance: nil,
 						upper_bound: nil,
+						lower_bound: nil,
 						location: nil
 					)
 				end

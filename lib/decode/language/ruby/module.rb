@@ -10,6 +10,7 @@ module Decode
 		module Ruby
 			# A Ruby-specific module.
 			class Module < Definition
+				# Initialize a module with its name and options.
 				def initialize(*arguments, **options)
 					super(*arguments, **options)
 					
