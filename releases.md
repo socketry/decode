@@ -1,8 +1,8 @@
 # Releases
 
-## Unreleased
+## v0.27.0
 
-	- Add `decode:documentation:markdown` bake task for generating LLM-optimized Markdown documentation.
+    - Add `decode:documentation:markdown` bake task for generating LLM-optimized Markdown documentation.
 
 ## v0.26.0
 
