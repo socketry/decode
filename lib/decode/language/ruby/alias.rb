@@ -21,6 +21,18 @@ module Decode
 				
 				attr :old_name
 				
+				# Whether this definition represents an alias.
+				# @returns [bool] Always true for aliases.
+				def alias?
+					true
+				end
+				
+				# The original name this alias refers to.
+				# @returns [Symbol]
+				def aliased_name
+					@old_name
+				end
+				
 				# Aliases don't require separate documentation as they reference existing methods.
 				# @returns [bool] Always false for aliases.
 				def coverage_relevant?

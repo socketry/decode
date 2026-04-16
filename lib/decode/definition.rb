@@ -166,6 +166,14 @@ module Decode
 			false
 		end
 		
+		# Whether this definition represents an alias to another definition.
+		# Tools can use this to filter aliases from outputs without parsing text.
+		#
+		# @returns [bool] False by default; specific definition types may override.
+		def alias?
+			false
+		end
+		
 		# Whether this represents a single entity to be documented (along with it's contents).
 		#
 		# @returns [bool]

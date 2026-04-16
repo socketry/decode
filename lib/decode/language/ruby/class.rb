@@ -18,9 +18,22 @@ module Decode
 					super(*arguments, **options)
 					
 					@super_class = super_class
+					@includes = []
+					@extends = []
+					@prepends = []
 				end
 				
+				# @attribute [String?] The super class name.
 				attr :super_class
+				
+				# @attribute [Array(Symbol)] Modules included into this class.
+				attr :includes
+				
+				# @attribute [Array(Symbol)] Modules extended into this class (adds singleton methods).
+				attr :extends
+				
+				# @attribute [Array(Symbol)] Modules prepended into this class (method lookup precedence).
+				attr :prepends
 				
 				# A class is a container for other definitions.
 				def container?

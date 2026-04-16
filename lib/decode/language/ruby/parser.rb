@@ -176,6 +176,40 @@ module Decode
 						name = node.name
 						
 						case name
+						when :include, :extend, :prepend
+							# Handle mixins inside classes/modules
+							if parent
+								if node.arguments
+									node.arguments.arguments.each do |arg|
+										mod_name = case arg.type
+										when :constant_read_node
+											# Qualify with enclosing namespace if available (e.g. Mixins::Greeting)
+											if parent.parent && parent.parent.respond_to?(:qualified_name)
+												"#{parent.parent.qualified_name}::#{arg.name}"
+											else
+												arg.name.to_s
+											end
+										when :constant_path_node
+											nested_name_for(arg)
+										else
+											# Skip unsupported argument types (e.g., dynamic expressions)
+											nil
+										end
+										if mod_name
+											case name
+											when :include
+												parent.respond_to?(:includes) && parent.includes << mod_name
+											when :extend
+												parent.respond_to?(:extends) && parent.extends << mod_name
+											when :prepend
+												parent.respond_to?(:prepends) && parent.prepends << mod_name
+											end
+										end
+									end
+								end
+							end
+							# Don't treat include/extend as definitions.
+							return
 						when :public, :protected, :private
 							# Handle cases like "private def foo" where method definitions are arguments
 							if node.arguments

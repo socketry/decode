@@ -10,6 +10,23 @@ module Decode
 		module Ruby
 			# A Ruby-specific module.
 			class Module < Definition
+				def initialize(*arguments, **options)
+					super(*arguments, **options)
+					
+					@includes = []
+					@extends = []
+					@prepends = []
+				end
+				
+				# @attribute [Array(Symbol)] Modules included into this module.
+				attr :includes
+				
+				# @attribute [Array(Symbol)] Modules extended into this module (adds singleton methods).
+				attr :extends
+				
+				# @attribute [Array(Symbol)] Modules prepended into this module (method lookup precedence).
+				attr :prepends
+				
 				# A module is a container for other definitions.
 				def container?
 					true

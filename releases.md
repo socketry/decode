@@ -1,5 +1,9 @@
 # Releases
 
+## Unreleased
+
+	- Add `decode:documentation:markdown` bake task for generating LLM-optimized Markdown documentation.
+
 ## v0.26.0
 
   - Add support for `@example` pragmas in Ruby documentation comments.
