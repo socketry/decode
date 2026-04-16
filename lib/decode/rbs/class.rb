@@ -51,10 +51,10 @@ module Decode
 				# Extract super class if present:
 				super_class = if @definition.super_class
 					::RBS::AST::Declarations::Class::Super.new(
-								name: qualified_name_to_rbs(@definition.super_class),
-								args: [],
-								location: nil
-							)
+						name: qualified_name_to_rbs(@definition.super_class),
+						args: [],
+						location: nil
+					)
 				end
 				
 				# Create the class declaration with generics:

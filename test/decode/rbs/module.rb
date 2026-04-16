@@ -145,7 +145,7 @@ describe Decode::RBS::Module do
 					ast = rbs_module.to_rbs_ast([], [const_definition], [])
 					
 					# Should include constants in module members
-					constants = ast.members.select {|m| m.is_a?(::RBS::AST::Declarations::Constant)}
+					constants = ast.members.select{|m| m.is_a?(::RBS::AST::Declarations::Constant)}
 					
 					expect(constants).to have_attributes(length: be == 1)
 					expect(constants.first.name).to be == :VERSION

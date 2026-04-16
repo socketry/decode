@@ -62,11 +62,11 @@ module Decode
 					type = ::Decode::RBS::Type.parse(type_string)
 					
 					::RBS::AST::Declarations::Constant.new(
-					name: constant_definition.name.to_sym,
-					type: type,
-					location: nil,
-					comment: nil
-				)
+						name: constant_definition.name.to_sym,
+						type: type,
+						location: nil,
+						comment: nil
+					)
 				end
 			end
 			

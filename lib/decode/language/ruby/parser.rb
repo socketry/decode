@@ -93,13 +93,13 @@ module Decode
 						path = nested_path_for(node.constant_path)
 						
 						definition = Module.new(path,
-									visibility: :public,
-									comments: comments_for(node),
-									parent: parent,
-									node: node,
-									language: @language,
-									source: source,
-								)
+							visibility: :public,
+							comments: comments_for(node),
+							parent: parent,
+							node: node,
+							language: @language,
+							source: source,
+						)
 						
 						store_definition(parent, path.last.to_sym, definition)
 						yield definition
@@ -114,14 +114,14 @@ module Decode
 						super_class = nested_name_for(node.superclass)
 						
 						definition = Class.new(path,
-									super_class: super_class,
-									visibility: :public, 
-									comments: comments_for(node),
-									parent: parent,
-									node: node,
-									language: @language,
-									source: source,
-								)
+							super_class: super_class,
+							visibility: :public, 
+							comments: comments_for(node),
+							parent: parent,
+							node: node,
+							language: @language,
+							source: source,
+						)
 						
 						store_definition(parent, path.last.to_sym, definition)
 						yield definition
@@ -134,13 +134,13 @@ module Decode
 					when :singleton_class_node
 						if name = singleton_name_for(node)
 							definition = Singleton.new(name,
-										comments: comments_for(node),
-										parent: parent,
-										node: node,
-										language: @language,
-										visibility: :public,
-										source: source
-									)
+								comments: comments_for(node),
+								parent: parent,
+								node: node,
+								language: @language,
+								visibility: :public,
+								source: source
+							)
 							
 							yield definition
 							
@@ -152,23 +152,23 @@ module Decode
 						receiver = receiver_for(node.receiver)
 						
 						definition = Method.new(node.name,
-									visibility: @visibility,
-									comments: comments_for(node),
-									parent: parent,
-									node: node,
-									language: @language,
-									receiver: receiver,
-									source: source,
-								)
+							visibility: @visibility,
+							comments: comments_for(node),
+							parent: parent,
+							node: node,
+							language: @language,
+							receiver: receiver,
+							source: source,
+						)
 						
 						yield definition
 					when :constant_write_node
 						definition = Constant.new(node.name,
-									comments: comments_for(node),
-									parent: parent,
-									node: node,
-									language: @language,
-								)
+							comments: comments_for(node),
+							parent: parent,
+							node: node,
+							language: @language,
+						)
 						
 						store_definition(parent, node.name, definition)
 						yield definition
@@ -187,13 +187,13 @@ module Decode
 										receiver = receiver_for(argument_node.receiver)
 										
 										definition = Method.new(argument_node.name,
-													visibility: name,
-													comments: comments_for(argument_node),
-													parent: parent,
-													node: argument_node,
-													language: @language,
-													receiver: receiver,
-												)
+											visibility: name,
+											comments: comments_for(argument_node),
+											parent: parent,
+											node: argument_node,
+											language: @language,
+											receiver: receiver,
+										)
 										
 										yield definition
 									end
@@ -217,9 +217,9 @@ module Decode
 							end
 						when :attr, :attr_reader, :attr_writer, :attr_accessor
 							definition = Attribute.new(attribute_name_for(node),
-										comments: comments_for(node),
-										parent: parent, language: @language, node: node
-									)
+								comments: comments_for(node),
+								parent: parent, language: @language, node: node
+							)
 							
 							yield definition
 						when :alias_method
@@ -233,29 +233,29 @@ module Decode
 								old_name = symbol_name_for(old_name_arg)
 								
 								definition = Alias.new(new_name.to_sym, old_name.to_sym,
-											comments: comments_for(node),
-											parent: parent,
-											node: node,
-											language: @language,
-											visibility: @visibility,
-											source: source,
-										)
+									comments: comments_for(node),
+									parent: parent,
+									node: node,
+									language: @language,
+									visibility: @visibility,
+									source: source,
+								)
 								
 								yield definition
 							end
 						else
 							# Check if this call should be treated as a definition
 							# either because it has a @name comment, @attribute comment, or a block
-							has_name_comment = comments_for(node).any? {|comment| comment.match(NAME_ATTRIBUTE)}
+							has_name_comment = comments_for(node).any?{|comment| comment.match(NAME_ATTRIBUTE)}
 							has_attribute_comment = kind_for(node, comments_for(node))
 							has_block = node.block
 							
 							if has_name_comment || has_attribute_comment || has_block
 								definition = Call.new(
-											attribute_name_for(node),
-											comments: comments_for(node),
-											parent: parent, language: @language, node: node
-										)
+									attribute_name_for(node),
+									comments: comments_for(node),
+									parent: parent, language: @language, node: node
+								)
 								
 								yield definition
 								
@@ -265,19 +265,19 @@ module Decode
 								end
 							end
 						end
-					when :alias_method_node
-						# Handle alias new_name old_name syntax
+					when :alias_node, :alias_method_node
+						# Handle `alias new_name old_name` syntax:
 						new_name = node.new_name.unescaped
 						old_name = node.old_name.unescaped
 						
 						definition = Alias.new(new_name.to_sym, old_name.to_sym,
-									comments: comments_for(node),
-									parent: parent,
-									node: node,
-									language: @language,
-									visibility: @visibility,
-									source: source,
-								)
+							comments: comments_for(node),
+							parent: parent,
+							node: node,
+							language: @language,
+							visibility: @visibility,
+							source: source,
+						)
 						
 						yield definition
 					when :if_node
@@ -550,20 +550,20 @@ module Decode
 								# Start a new segment with these comments
 								yield current_segment if current_segment
 								current_segment = Segment.new(
-											preceding_comments.map{|comment| comment.location.slice.sub(/^#[\s\t]?/, "")},
-											@language,
-											statement
-										)
+									preceding_comments.map{|comment| comment.location.slice.sub(/^#[\s\t]?/, "")},
+									@language,
+									statement
+								)
 							elsif current_segment
 								# Extend current segment with this statement
 								current_segment.expand(statement)
 							else
 								# Start a new segment without comments
 								current_segment = Segment.new(
-											[],
-											@language,
-											statement
-										)
+									[],
+									@language,
+									statement
+								)
 							end
 						end
 						
@@ -571,10 +571,10 @@ module Decode
 					else
 						# One top level segment:
 						segment = Segment.new(
-									[],
-									@language,
-									node
-								)
+							[],
+							@language,
+							node
+						)
 						
 						yield segment
 					end

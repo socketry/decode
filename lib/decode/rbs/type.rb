@@ -21,10 +21,10 @@ module Decode
 					true
 				when ::RBS::Types::Union
 					# Type | nil form - recursively check all union members
-					rbs_type.types.any? {|type| nullable?(type)}
+					rbs_type.types.any?{|type| nullable?(type)}
 				when ::RBS::Types::Tuple
 					# [Type] form - recursively check all tuple elements
-					rbs_type.types.any? {|type| nullable?(type)}
+					rbs_type.types.any?{|type| nullable?(type)}
 				when ::RBS::Types::Bases::Nil
 					# Direct nil type
 					true

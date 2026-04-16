@@ -34,7 +34,7 @@ describe Decode::Language::Ruby do
 		end
 		
 		it "should extract clean comments without hash symbols" do		# Find the method definition
-			method_definition = definitions.find {|definition| definition.name == :method}
+			method_definition = definitions.find{|definition| definition.name == :method}
 			expect(method_definition).not.to be_nil
 			expect(method_definition.documented?).to be_truthy
 			
@@ -63,7 +63,7 @@ describe Decode::Language::Ruby do
 		
 		it "should only extract adjacent comments" do
 			# Find the documented_method:
-			documented_method = definitions.find {|definition| definition.name == :documented_method}
+			documented_method = definitions.find{|definition| definition.name == :documented_method}
 			expect(documented_method).not.to be_nil
 			
 			# Should only have the 2 adjacent comments (lines 10-11):
@@ -72,7 +72,7 @@ describe Decode::Language::Ruby do
 			expect(documented_method.comments[1]).to be == "that SHOULD be included."
 			
 			# Find the another_method:
-			another_method = definitions.find {|definition| definition.name == :another_method}
+			another_method = definitions.find{|definition| definition.name == :another_method}
 			expect(another_method).not.to be_nil
 			
 			# Should only have the 1 adjacent comment (line 16):

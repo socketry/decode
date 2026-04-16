@@ -260,8 +260,8 @@ describe Decode::RBS::Class do
 				ast = rbs_class.to_rbs_ast([], [], [attr_definition])
 				
 				# Should include both attr_reader and instance variable
-				attr_readers = ast.members.select {|m| m.is_a?(::RBS::AST::Members::AttrReader)}
-				instance_vars = ast.members.select {|m| m.is_a?(::RBS::AST::Members::InstanceVariable)}
+				attr_readers = ast.members.select{|m| m.is_a?(::RBS::AST::Members::AttrReader)}
+				instance_vars = ast.members.select{|m| m.is_a?(::RBS::AST::Members::InstanceVariable)}
 				
 				expect(attr_readers).to have_attributes(length: be == 1)
 				expect(instance_vars).to have_attributes(length: be == 1)
@@ -363,7 +363,7 @@ describe Decode::RBS::Class do
 				ast = rbs_class.to_rbs_ast([], [const_definition], [])
 				
 				# Should include constants in members
-				constants = ast.members.select {|m| m.is_a?(::RBS::AST::Declarations::Constant)}
+				constants = ast.members.select{|m| m.is_a?(::RBS::AST::Declarations::Constant)}
 				
 				expect(constants).to have_attributes(length: be == 1)
 				expect(constants.first.name).to be == :VERSION

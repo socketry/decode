@@ -103,15 +103,15 @@ module Decode
 				kind = @definition.receiver ? :singleton : :instance
 				
 				::RBS::AST::Members::MethodDefinition.new(
-				name: method_name.to_sym,
-				kind: kind,
-				overloads: overloads,
-				annotations: [],
-				location: nil,
-				comment: comment,
-				overloading: false,
-				visibility: @definition.visibility || :public
-			)
+					name: method_name.to_sym,
+					kind: kind,
+					overloads: overloads,
+					annotations: [],
+					location: nil,
+					comment: comment,
+					overloading: false,
+					visibility: @definition.visibility || :public
+				)
 			end
 			
 			# Build a complete RBS function type from AST information.
@@ -265,7 +265,7 @@ module Decode
 				
 				# Find @parameter tags (but not @option tags, which are handled separately):
 				param_tags = documentation.filter(Decode::Comment::Parameter).to_a
-				param_tags = param_tags.reject {|tag| tag.is_a?(Decode::Comment::Option)}
+				param_tags = param_tags.reject{|tag| tag.is_a?(Decode::Comment::Option)}
 				return [] if param_tags.empty?
 				
 				param_tags.map do |tag|

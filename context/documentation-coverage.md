@@ -197,7 +197,7 @@ Solution: Add description and pragmas:
 # @returns [Array] Processed results.
 def process_data(data)
 	# Process the input:
-	results = data.map {|item| transform(item)}
+	results = data.map{|item| transform(item)}
 	
 	# Return processed results:
 	results

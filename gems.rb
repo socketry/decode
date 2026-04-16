@@ -22,6 +22,7 @@ group :test do
 	gem "covered"
 	
 	gem "rubocop"
+	gem "rubocop-md"
 	gem "rubocop-socketry"
 	
 	gem "bake-test"
@@ -31,5 +32,3 @@ group :test do
 	
 	gem "build-files"
 end
-
-gem "rubocop-md", "~> 2.0", group: :test
