@@ -1,5 +1,9 @@
 # Releases
 
+## Unreleased
+
+  - Add support for indexing methods inside `Struct.new` and `Data.define` assignment blocks.
+
 ## v0.27.0
 
     - Add `decode:documentation:markdown` bake task for generating LLM-optimized Markdown documentation.
