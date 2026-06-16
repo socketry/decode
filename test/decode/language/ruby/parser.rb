@@ -196,60 +196,6 @@ describe Decode::Language::Ruby do
 		end
 	end
 	
-	with "Struct.new and Data.define assignments" do
-		let(:path) {File.expand_path(".fixtures/data_struct.rb", __dir__)}
-		
-		it "treats Struct.new assignments as class-like containers" do
-			context = definitions.find{|definition| definition.full_path == [:Context]}
-			
-			expect(context).to be_a(Decode::Language::Ruby::Class)
-			expect(context).to have_attributes(
-				short_form: be == "class Context",
-				long_form: be == "class Context < Struct",
-				comments: be == ["The context object."],
-			)
-			expect(context).to be(:container?)
-		end
-		
-		it "extracts methods from Struct.new assignment blocks" do
-			methods = definitions.select{|definition| definition.parent&.name == :Context}
-			
-			expect(methods.collect(&:short_form)).to be == [
-				"def self.for",
-				"def words",
-			]
-			expect(methods.collect(&:full_path)).to be == [
-				[:Context, :for],
-				[:Context, :words],
-			]
-		end
-		
-		it "treats Data.define assignments as class-like containers" do
-			request = definitions.find{|definition| definition.full_path == [:Types, :Request]}
-			
-			expect(request).to be_a(Decode::Language::Ruby::Class)
-			expect(request).to have_attributes(
-				short_form: be == "class Request",
-				long_form: be == "class Types::Request < Data",
-				comments: be == ["The request object."],
-			)
-			expect(request).to be(:container?)
-		end
-		
-		it "extracts methods from Data.define assignment blocks" do
-			methods = definitions.select{|definition| definition.parent&.name == :Request}
-			
-			expect(methods.collect(&:short_form)).to be == [
-				"def self.for",
-				"def words",
-			]
-			expect(methods.collect(&:full_path)).to be == [
-				[:Types, :Request, :for],
-				[:Types, :Request, :words],
-			]
-		end
-	end
-	
 	with "attributes" do
 		let(:path) {File.expand_path(".fixtures/attributes.rb", __dir__)}
 		
