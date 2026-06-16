@@ -163,15 +163,36 @@ module Decode
 						
 						yield definition
 					when :constant_write_node
-						definition = Constant.new(node.name,
-							comments: comments_for(node),
-							parent: parent,
-							node: node,
-							language: @language,
-						)
-						
-						store_definition(parent, node.name, definition)
-						yield definition
+						if super_class = struct_super_class_for(node.value)
+							definition = Class.new([node.name],
+								super_class: super_class,
+								visibility: :public,
+								comments: comments_for(node),
+								parent: parent,
+								node: node,
+								language: @language,
+								source: source,
+							)
+							
+							store_definition(parent, node.name, definition)
+							yield definition
+							
+							if body = node.value.block&.body
+								with_visibility do
+									walk_definitions(body, definition, source, &block)
+								end
+							end
+						else
+							definition = Constant.new(node.name,
+								comments: comments_for(node),
+								parent: parent,
+								node: node,
+								language: @language,
+							)
+							
+							store_definition(parent, node.name, definition)
+							yield definition
+						end
 					when :call_node
 						name = node.name
 						
@@ -503,6 +524,24 @@ module Decode
 						node.name.to_s
 					when :constant_path_node
 						nested_name_for(node)
+					end
+				end
+				
+				def struct_super_class_for(node)
+					return unless node&.type == :call_node
+					return unless node.block
+					
+					case node.receiver&.type
+					when :constant_read_node
+						receiver_name = node.receiver.name.to_s
+					when :constant_path_node
+						receiver_name = nested_name_for(node.receiver)
+					end
+					
+					if receiver_name == "Struct" && node.name == :new
+						return "Struct"
+					elsif receiver_name == "Data" && node.name == :define
+						return "Data"
 					end
 				end
 				
