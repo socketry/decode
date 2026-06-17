@@ -1,6 +1,6 @@
 # Releases
 
-## Unreleased
+## v0.28.0
 
   - Add support for indexing methods inside `Struct.new` and `Data.define` assignment blocks.
 

@@ -24,6 +24,10 @@ Please see the [project documentation](https://socketry.github.io/decode/) for m
 
 Please see the [project releases](https://socketry.github.io/decode/releases/index) for all releases.
 
+### v0.28.0
+
+  - Add support for indexing methods inside `Struct.new` and `Data.define` assignment blocks.
+
 ### v0.27.0
 
     - Add `decode:documentation:markdown` bake task for generating LLM-optimized Markdown documentation.
