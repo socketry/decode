@@ -33,6 +33,8 @@ describe Decode::Language::Ruby do
 			expect(definitions[1].short_form).to be == "class Child"
 			expect(definitions[2].short_form).to be == "class << self"
 			expect(definitions[3].short_form).to be == "class Child"
+			expect(definitions[4].short_form).to be == "class QualifiedChild"
+			expect(definitions[5].short_form).to be == "class AbsoluteChild"
 		end
 		
 		it "has long form" do
@@ -40,6 +42,8 @@ describe Decode::Language::Ruby do
 			expect(definitions[1].long_form).to be == "class Child < Parent"
 			expect(definitions[2].long_form).to be == "class << self"
 			expect(definitions[3].long_form).to be == "class My::Nested::Child"
+			expect(definitions[4].long_form).to be == "class QualifiedChild < My::Parent"
+			expect(definitions[5].long_form).to be == "class AbsoluteChild < ::Parent"
 		end
 		
 		it "should handle singleton classes" do
