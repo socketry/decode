@@ -14,3 +14,9 @@ end
 
 class My::Nested::Child
 end
+
+class QualifiedChild < My::Parent
+end
+
+class AbsoluteChild < ::Parent
+end

@@ -502,7 +502,10 @@ module Decode
 				end
 				
 				def nested_name_for(node)
-					nested_path_for(node)&.join("::")
+					case node&.type
+					when :constant_read_node, :constant_path_node
+						return node.full_name
+					end
 				end
 				
 				def symbol_name_for(node)
