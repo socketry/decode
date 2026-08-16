@@ -202,20 +202,7 @@ module Decode
 							if parent
 								if node.arguments
 									node.arguments.arguments.each do |arg|
-										mod_name = case arg.type
-										when :constant_read_node
-											# Qualify with enclosing namespace if available (e.g. Mixins::Greeting)
-											if parent.parent && parent.parent.respond_to?(:qualified_name)
-												"#{parent.parent.qualified_name}::#{arg.name}"
-											else
-												arg.name.to_s
-											end
-										when :constant_path_node
-											nested_name_for(arg)
-										else
-											# Skip unsupported argument types (e.g., dynamic expressions)
-											nil
-										end
+										mod_name = nested_name_for(arg)
 										if mod_name
 											case name
 											when :include

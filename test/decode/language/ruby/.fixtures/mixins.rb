@@ -12,7 +12,7 @@ module Mixins
 	
 	class Greeter
 		include Greeting
-		extend Greeting
-		prepend Greeting
+		extend Mixins::Greeting
+		prepend ::Mixins::Greeting
 	end
 end
