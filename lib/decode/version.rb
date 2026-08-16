@@ -5,5 +5,5 @@
 
 module Decode
 	# @constant [String] The version of the gem.
-	VERSION = "0.29.0"
+	VERSION = "0.30.0"
 end
