@@ -19,8 +19,8 @@ describe Decode::Language::Ruby do
 		my_class = definitions.find{|d| d.is_a?(Decode::Language::Ruby::Class) && d.qualified_name == "Mixins::Greeter"}
 		expect(my_class).not.to be_nil
 		
-		expect(my_class.includes).to be == ["Mixins::Greeting"]
+		expect(my_class.includes).to be == ["Greeting"]
 		expect(my_class.extends).to be == ["Mixins::Greeting"]
-		expect(my_class.prepends).to be == ["Mixins::Greeting"]
+		expect(my_class.prepends).to be == ["::Mixins::Greeting"]
 	end
 end
