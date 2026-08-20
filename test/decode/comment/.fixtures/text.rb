@@ -8,7 +8,7 @@
 # 	The items are yielded in reverse order.
 # 	@parameter item [Integer]
 # 		The item will always be negative.
-# For more details see {Array}.
+# For more details see ruby:`Array`.
 def each
 end
 

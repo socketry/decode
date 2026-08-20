@@ -139,7 +139,7 @@ module Decode
 		end
 		
 		# A long form which uses the qualified name if possible.
-		# Defaults to {long_form}.
+		# Defaults to ruby:`long_form`.
 		#
 		# @returns [String?]
 		def qualified_form
@@ -183,7 +183,7 @@ module Decode
 		
 		# Structured access to the definitions comments.
 		#
-		# @returns [Documentation?] A {Documentation} instance if this definition has comments.
+		# @returns [Documentation?] A ruby:`Documentation` instance if this definition has comments.
 		def documentation
 			if comments = @comments and comments.any?
 				@documentation ||= Documentation.new(comments, @language)
@@ -192,7 +192,7 @@ module Decode
 		
 		# The location of the definition.
 		#
-		# @returns [Location?] A {Location} instance if this definition has a location.
+		# @returns [Location?] A ruby:`Location` instance if this definition has a location.
 		def location
 			nil
 		end

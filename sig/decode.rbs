@@ -47,7 +47,7 @@ module Decode
       public def initialize: (Array[Node | Text]? children) -> void
 
       # Whether this node has any children nodes.
-      # Ignores {Text} instances.
+      # Ignores ruby:`Text` instances.
       public def children?: () -> bool
 
       # Add a child node to this node.
@@ -62,7 +62,7 @@ module Decode
       # Any lines of text associated with this node.
       public def text: () -> Array[String]?
 
-      # Traverse the tags from this node using {each}. Invoke `descend.call(child)` to recursively traverse the specified child.
+      # Traverse the tags from this node using ruby:`each`. Invoke `descend.call(child)` to recursively traverse the specified child.
       public def traverse: () { (Node node, Proc descend) -> void } -> untyped
 
       # Extract text lines from Text children of this node.
@@ -99,7 +99,7 @@ module Decode
     # Asserts a specific property about the method signature.
     #
     # - `@reentrant This method is thread-safe.`
-    # - `@deprecated Please use {other_method} instead.`
+    # - ``@deprecated Please use ruby:`other_method` instead.``
     # - `@blocking This method may block.`
     # - `@asynchronous This method may yield.`
     class Pragma < Tag
@@ -302,7 +302,7 @@ module Decode
     public def long_form: () -> String?
 
     # A long form which uses the qualified name if possible.
-    # Defaults to {long_form}.
+    # Defaults to ruby:`long_form`.
     public def qualified_form: () -> String?
 
     # Whether the definition spans multiple lines.
@@ -1161,7 +1161,7 @@ module Decode
     public def each: (?Array[Symbol]) { (Array[Symbol], Array[T] | nil) -> void } -> void
 
     # Traverse the trie starting from the specified path.
-    # See {Node#traverse} for details.
+    # See ruby:`Node#traverse` for details.
     public def traverse: (?Array[Symbol]) { (Array[Symbol], Node, Proc) -> void } -> void
 
     # Represents a single node in the trie.

@@ -119,7 +119,7 @@ module Decode
 		end
 		
 		# Traverse the trie starting from the specified path.
-		# See {Node#traverse} for details.
+		# See ruby:`Node#traverse` for details.
 		# @parameter path [Array(Symbol)] The starting path to traverse from.
 		# @yields {|path, node, descend| ...} Called for each node during traversal.
 		# @rbs (?Array[Symbol]) { (Array[Symbol], Node, Proc) -> void } -> void

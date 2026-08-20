@@ -10,7 +10,7 @@ module Decode
 		# Asserts a specific property about the method signature.
 		#
 		# - `@reentrant This method is thread-safe.`
-		# - `@deprecated Please use {other_method} instead.`
+		# - ``@deprecated Please use ruby:`other_method` instead.``
 		# - `@blocking This method may block.`
 		# - `@asynchronous This method may yield.`
 		#

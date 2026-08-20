@@ -22,10 +22,10 @@ This guide covers documentation practices and pragmas supported by the Decode ge
 
 #### Links and Code Formatting
 
-- Curly braces `{}`: Use curly braces to create links to other methods, classes, or modules. The Decode gem uses `@index.lookup(text)` to resolve these references.
-  - Absolute references: `{Decode::Index#lookup}` - Links to a specific method in a specific class
-  - Relative references: `{lookup}` - Links to a method in the current scope or class
-  - Class references: `{User}` - Links to a class or module
+- Language-prefixed inline code: Use ruby:`identifier` to create links to other methods, classes, or modules. The Decode gem uses `@index.lookup(text)` to resolve these references.
+  - Absolute references: ruby:`Decode::Index#lookup` - Links to a specific method in a specific class
+  - Relative references: ruby:`lookup` - Links to a method in the current scope or class
+  - Class references: ruby:`User` - Links to a class or module
 - Backticks: Use backticks for code formatting of symbols, values, method names, and technical terms that should appear in monospace font.
   - Symbols: `:admin`, `:user`, `:guest`
   - Values: `true`, `false`, `nil`
@@ -68,7 +68,7 @@ class User
 	
 	# Deactivate the user account.
 	# This method sets the user's status to inactive. Use this instead of
-	# the deprecated {disable!} method. The account status can be checked
+	# the deprecated ruby:`disable!` method. The account status can be checked
 	# using `active?` or by examining the `:active` attribute.
 	# @returns [bool] Returns `true` if deactivation was successful.
 	def deactivate!
@@ -106,7 +106,7 @@ end
 Note the difference: `User` is described as a thing ("A user account..."), while `Client` is described by what it does ("An HTTP client that manages..."), and `ConnectionError` is described by when it occurs ("Raised when...").
 
 **Key formatting examples from above:**
-- `{disable!}` - Creates a link to the `disable!` method (relative reference)
+- ruby:`disable!` - Creates a link to the `disable!` method (relative reference)
 - `active?` - Formats the method name in monospace (backticks for code formatting)
 - `:active` - Formats the symbol in monospace (backticks for code formatting)
 - `true` - Formats the boolean value in monospace (backticks for code formatting)
@@ -306,7 +306,7 @@ end
 Marks methods as deprecated with migration guidance.
 
 ```ruby
-# @deprecated Use {new_method} instead.
+# @deprecated Use ruby:`new_method` instead.
 def old_method
 	# Legacy implementation
 end

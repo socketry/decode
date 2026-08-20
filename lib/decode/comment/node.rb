@@ -14,7 +14,7 @@ module Decode
 			end
 			
 			# Whether this node has any children nodes.
-			# Ignores {Text} instances.
+			# Ignores ruby:`Text` instances.
 			# @returns [bool]
 			def children?
 				@children&.any?{|child| child.is_a?(Node)} || false
@@ -75,7 +75,7 @@ module Decode
 				end
 			end
 			
-			# Traverse the tags from this node using {each}. Invoke `descend.call(child)` to recursively traverse the specified child.
+			# Traverse the tags from this node using ruby:`each`. Invoke `descend.call(child)` to recursively traverse the specified child.
 			#
 			# @yields {|node, descend| descend.call}
 			# 	@parameter node [Node] The current node which is being traversed.
