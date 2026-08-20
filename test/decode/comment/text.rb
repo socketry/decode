@@ -39,7 +39,7 @@ describe Decode::Comment::Text do
 		it "can extract top level text" do
 			expect(documentation.text).to be == [
 				"Iterates over all the items.",
-				"For more details see {Array}.",
+				"For more details see ruby:`Array`.",
 			]
 		end
 	end
